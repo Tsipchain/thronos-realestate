@@ -1,0 +1,613 @@
+{% extends "base.html" %}
+
+{% block title %}🔄 Thronos Swap{% endblock %}
+
+{% block styles %}
+<style>
+    .swap-container {
+        max-width: 480px;
+        margin: 40px auto;
+        background: #111;
+        border: 1px solid #0f0;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+    }
+    
+    .token-input-group {
+        background: #000;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 8px;
+    }
+    
+    .token-input-group:focus-within {
+        border-color: #0f0;
+    }
+    
+    .token-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.9em;
+        color: #888;
+    }
+    
+    .token-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    input.amount-input {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 24px;
+        width: 60%;
+        font-family: monospace;
+        outline: none;
+    }
+    
+    .token-select {
+        background: #222;
+        color: #fff;
+        border: 1px solid #444;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .swap-arrow {
+        text-align: center;
+        margin: -10px 0;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .swap-arrow button {
+        background: #111;
+        border: 1px solid #0f0;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        color: #0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .swap-arrow button:hover {
+        background: #0f0;
+        color: #000;
+    }
+    
+    .swap-btn {
+        width: 100%;
+        background: #0f0;
+        color: #000;
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 16px;
+    }
+    
+    .swap-btn:hover {
+        background: #0c0;
+    }
+    
+    .swap-btn:disabled {
+        background: #333;
+        color: #666;
+        cursor: not-allowed;
+    }
+    
+    .rate-info {
+        margin-top: 16px;
+        padding: 12px;
+        background: #001100;
+        border-radius: 8px;
+        font-size: 0.9em;
+        display: flex;
+        justify-content: space-between;
+        color: #0f0;
+    }
+    
+    .hidden { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="swap-container">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2>🔄 Swap</h2>
+        <span style="font-size:0.8em; color:#666;">Slippage: Auto</span>
+    </div>
+    
+    <div id="walletWarning" style="color:#ffaa88; margin-bottom:15px; display:none; text-align:center;">
+        ⚠️ <a href="/wallet" style="color:#ffaa88; text-decoration:underline;">Connect Wallet</a> to swap
+    </div>
+
+    <!-- FROM -->
+    <div class="token-input-group">
+        <div class="token-header">
+            <span><span class="lang-el">Από</span><span class="lang-en">From</span></span>
+            <span>Balance: <span id="balanceFrom">0.00</span></span>
+        </div>
+        <div class="token-row">
+            <input type="number" id="amountFrom" class="amount-input" placeholder="0.0" oninput="calcTo()">
+            <select id="symbolFrom" class="token-select" onchange="onTokenChange()"></select>
+        </div>
+    </div>
+
+    <!-- ARROW -->
+    <div class="swap-arrow">
+        <button onclick="flipTokens()">⬇️</button>
+    </div>
+
+    <!-- TO -->
+    <div class="token-input-group">
+        <div class="token-header">
+            <span><span class="lang-el">Προς</span><span class="lang-en">To</span></span>
+            <span>Balance: <span id="balanceTo">0.00</span></span>
+        </div>
+        <div class="token-row">
+            <input type="number" id="amountTo" class="amount-input" placeholder="0.0" readonly>
+            <select id="symbolTo" class="token-select" onchange="onTokenChange()"></select>
+        </div>
+    </div>
+
+    <div class="rate-info">
+        <span>Rate</span>
+        <span id="rateDisplay">1 THR = 0.0001 wBTC</span>
+    </div>
+
+    <button id="swapBtn" class="swap-btn" onclick="doSwap()">Swap</button>
+    
+    <div id="swapResult" style="margin-top:10px; text-align:center; font-family:monospace; white-space:pre-wrap;"></div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+if (window.__swapInitDone) return;
+window.__swapInitDone = true;
+
+const $ = (id) => document.getElementById(id);
+
+let swapTokenBalances = {};
+let availableTokens = [];
+let poolPairs = [];
+let latestQuote = null;
+const KNOWN_BALANCE_SYMBOLS = ['THR', 'WBTC', 'L2E', 'JAM', 'LOUMIDIS', 'HPENNIS', 'CVT', '7CEB', 'MAR'];
+
+function setBalance(symbol, value) {
+    if (!symbol) return;
+    const normalized = symbol.toString().toUpperCase();
+    const amount = Number(value);
+    swapTokenBalances[normalized] = Number.isFinite(amount) ? amount : 0;
+}
+
+function absorbBalanceMap(map) {
+    if (!map || typeof map !== 'object' || Array.isArray(map)) return;
+    Object.entries(map).forEach(([symbol, value]) => {
+        if (value && typeof value === 'object') {
+            setBalance(value.symbol || symbol, value.balance ?? value.amount ?? value.value ?? 0);
+        } else {
+            setBalance(symbol, value);
+        }
+    });
+}
+
+function parseBalancePayload(data) {
+    swapTokenBalances = {};
+    KNOWN_BALANCE_SYMBOLS.forEach(symbol => { swapTokenBalances[symbol] = 0; });
+    if (Array.isArray(data.tokens)) {
+        data.tokens.forEach(t => setBalance(t.symbol, t.balance ?? t.amount ?? 0));
+    }
+    absorbBalanceMap(data.balances);
+    absorbBalanceMap(data.token_balances);
+    absorbBalanceMap(data.tokens_by_symbol);
+    if (typeof data.balance !== 'undefined') setBalance('THR', data.balance);
+    if (typeof data.thr_balance !== 'undefined') setBalance('THR', data.thr_balance);
+    if (typeof data.wbtc_balance !== 'undefined') setBalance('WBTC', data.wbtc_balance);
+    if (typeof data.l2e_balance !== 'undefined') setBalance('L2E', data.l2e_balance);
+    if (typeof data.jam_balance !== 'undefined') setBalance('JAM', data.jam_balance);
+    KNOWN_BALANCE_SYMBOLS.forEach(symbol => {
+        if (typeof data[symbol] !== 'undefined') setBalance(symbol, data[symbol]);
+        if (typeof data[symbol.toLowerCase()] !== 'undefined') setBalance(symbol, data[symbol.toLowerCase()]);
+    });
+    return swapTokenBalances;
+}
+
+async function requireSwapWalletAuth(txCore) {
+    if (!window.WalletAuth || typeof WalletAuth.requireUnlockedWallet !== 'function') {
+        throw new Error('missing_wallet_signing_material');
+    }
+    const wallet = await WalletAuth.requireUnlockedWallet();
+    const publicKey = wallet.getPublicKey();
+    const signedTx = await wallet.signTransaction(txCore);
+    const signature = typeof signedTx === 'string' ? signedTx : signedTx && signedTx.signature;
+    return {
+        trader_thr: wallet.address,
+        credential_lookup_address: wallet.credentialLookupAddress || wallet.address,
+        public_key: publicKey,
+        signed_tx: typeof signedTx === 'string' ? { ...txCore, public_key: publicKey, signature } : signedTx,
+        signature,
+        auth_secret: wallet.authSecret || ''
+    };
+}
+
+const SWAP_KNOWN_SYMBOLS = ['THR', 'WBTC', 'L2E', 'JAM', 'LOUMIDIS', 'HPENNIS', 'CVT', '7CEB', 'MAR'];
+
+function normalizeSwapSymbol(symbol) {
+    return String(symbol || '').trim().toUpperCase();
+}
+
+function parseSwapBalanceValue(value) {
+    const parsed = Number(value || 0);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getSwapActiveWalletAddress() {
+    if (typeof window.getActiveWalletAddress === 'function') {
+        return window.getActiveWalletAddress() || '';
+    }
+    if (window.walletSession && typeof window.walletSession.getActiveAddress === 'function') {
+        return window.walletSession.getActiveAddress() || '';
+    }
+    if (window.walletSession && typeof window.walletSession.getAddress === 'function') {
+        return window.walletSession.getAddress() || '';
+    }
+    return localStorage.getItem('thr_address') || '';
+}
+
+function isSwapWalletReady(addr) {
+    if (!addr) return false;
+    if (!window.walletSession || typeof window.walletSession.isBound !== 'function') return true;
+    return !!window.walletSession.isBound();
+}
+
+function applySwapBalance(symbol, value, balances) {
+    const normalized = normalizeSwapSymbol(symbol);
+    if (!normalized) return;
+    balances[normalized] = parseSwapBalanceValue(value);
+}
+
+function normalizeSwapBalances(data) {
+    const balances = {};
+    SWAP_KNOWN_SYMBOLS.forEach(sym => { balances[sym] = 0; });
+
+    if (Array.isArray(data.tokens)) {
+        data.tokens.forEach(token => {
+            applySwapBalance(token.symbol || token.token || token.ticker, token.balance ?? token.amount ?? token.value, balances);
+        });
+    }
+
+    ['balances', 'token_balances', 'tokens_by_symbol'].forEach(key => {
+        const entries = data[key];
+        if (!entries || Array.isArray(entries) || typeof entries !== 'object') return;
+        Object.entries(entries).forEach(([symbol, value]) => {
+            if (value && typeof value === 'object') {
+                applySwapBalance(symbol, value.balance ?? value.amount ?? value.value, balances);
+            } else {
+                applySwapBalance(symbol, value, balances);
+            }
+        });
+    });
+
+    if (data.THR !== undefined || data.thr !== undefined || data.balance !== undefined) {
+        applySwapBalance('THR', data.THR ?? data.thr ?? data.balance, balances);
+    }
+    if (data.WBTC !== undefined || data.wbtc !== undefined) {
+        applySwapBalance('WBTC', data.WBTC ?? data.wbtc, balances);
+    }
+    if (data.L2E !== undefined || data.l2e !== undefined) {
+        applySwapBalance('L2E', data.L2E ?? data.l2e, balances);
+    }
+
+    return balances;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const addr = getSwapActiveWalletAddress();
+    if (!isSwapWalletReady(addr)) {
+        $('walletWarning').style.display = 'block';
+        $('swapBtn').disabled = true;
+        $('swapBtn').textContent = "Connect Wallet";
+    } else {
+        await Promise.all([loadBalances(addr), loadSwapCatalog()]);
+        setDefaultTokens();
+        calcTo();
+    }
+});
+
+async function loadBalances(addr = getSwapActiveWalletAddress()) {
+    try {
+        if (!addr) return;
+        const res = await fetch(`/api/balances?address=${encodeURIComponent(addr)}&show_zero=true`);
+        const data = await res.json();
+        swapTokenBalances = normalizeSwapBalances(data || {});
+        updateBalanceDisplays();
+    } catch (e) {
+        console.error("Load balance error:", e);
+    }
+}
+
+async function loadSwapCatalog() {
+    const [poolsRes, tokensRes] = await Promise.all([
+        fetch('/api/v1/pools').then(r => r.json()).catch(() => ({ pools: [] })),
+        fetch('/api/v1/tokens').then(r => r.json()).catch(() => ({ tokens: [] })),
+    ]);
+    const registry = new Map((tokensRes.tokens || []).map(t => [normalizeSwapSymbol(t.symbol), t]));
+    const poolTokens = new Set();
+    poolPairs = [];
+    (poolsRes.pools || []).forEach(pool => {
+        if (pool.token_a) poolTokens.add(normalizeSwapSymbol(pool.token_a));
+        if (pool.token_b) poolTokens.add(normalizeSwapSymbol(pool.token_b));
+        if (pool.token_a && pool.token_b) {
+            poolPairs.push([normalizeSwapSymbol(pool.token_a), normalizeSwapSymbol(pool.token_b)]);
+        }
+    });
+    availableTokens = Array.from(poolTokens).filter(sym => registry.has(sym) || KNOWN_BALANCE_SYMBOLS.includes(sym));
+    availableTokens.sort();
+
+    const selectFrom = $('symbolFrom');
+    const selectTo = $('symbolTo');
+    selectFrom.innerHTML = '';
+    selectTo.innerHTML = '';
+    availableTokens.forEach(sym => {
+        const optFrom = document.createElement('option');
+        optFrom.value = sym;
+        optFrom.textContent = sym;
+        selectFrom.appendChild(optFrom);
+
+        const optTo = document.createElement('option');
+        optTo.value = sym;
+        optTo.textContent = sym;
+        selectTo.appendChild(optTo);
+    });
+}
+
+function setDefaultTokens() {
+    const selectFrom = $('symbolFrom');
+    const selectTo = $('symbolTo');
+    if (availableTokens.includes('THR')) {
+        selectFrom.value = 'THR';
+    }
+    const fallbackTo = availableTokens.find(sym => sym !== selectFrom.value);
+    if (fallbackTo) {
+        selectTo.value = fallbackTo;
+    }
+    updateBalanceDisplays();
+    refreshToOptions();
+}
+
+function updateBalanceDisplays() {
+    const fromSymbol = normalizeSwapSymbol($('symbolFrom').value);
+    const toSymbol = normalizeSwapSymbol($('symbolTo').value);
+    const fromBal = swapTokenBalances[fromSymbol] || 0;
+    const toBal = swapTokenBalances[toSymbol] || 0;
+    $('balanceFrom').textContent = fromBal.toFixed(6);
+    $('balanceTo').textContent = toBal.toFixed(6);
+    refreshSwapButtonState();
+}
+
+function canRoute(fromToken, toToken) {
+    if (fromToken === toToken) return false;
+    const direct = poolPairs.some(pair =>
+        (pair[0] === fromToken && pair[1] === toToken) || (pair[1] === fromToken && pair[0] === toToken)
+    );
+    if (direct) return true;
+    const hasFromThr = poolPairs.some(pair =>
+        (pair[0] === fromToken && pair[1] === 'THR') || (pair[1] === fromToken && pair[0] === 'THR')
+    );
+    const hasToThr = poolPairs.some(pair =>
+        (pair[0] === toToken && pair[1] === 'THR') || (pair[1] === toToken && pair[0] === 'THR')
+    );
+    return hasFromThr && hasToThr;
+}
+
+function refreshToOptions() {
+    const selectTo = $('symbolTo');
+    const fromToken = normalizeSwapSymbol($('symbolFrom').value);
+    const previous = selectTo.value;
+    selectTo.innerHTML = '';
+    availableTokens.forEach(sym => {
+        if (sym === fromToken) return;
+        if (!canRoute(fromToken, sym)) return;
+        const opt = document.createElement('option');
+        opt.value = sym;
+        opt.textContent = sym;
+        selectTo.appendChild(opt);
+    });
+    if (previous && Array.from(selectTo.options).some(o => o.value === previous)) {
+        selectTo.value = previous;
+    } else if (selectTo.options.length > 0) {
+        selectTo.value = selectTo.options[0].value;
+    }
+}
+
+function flipTokens() {
+    const selectFrom = $('symbolFrom');
+    const selectTo = $('symbolTo');
+    const fromVal = selectFrom.value;
+    selectFrom.value = selectTo.value;
+    selectTo.value = fromVal;
+    const amtFrom = $('amountFrom').value;
+    $('amountFrom').value = $('amountTo').value;
+    $('amountTo').value = amtFrom;
+    updateBalanceDisplays();
+    refreshToOptions();
+    calcTo();
+}
+
+function onTokenChange() {
+    updateBalanceDisplays();
+    refreshToOptions();
+    calcTo();
+}
+
+function refreshSwapButtonState() {
+    const amount = parseFloat($('amountFrom').value) || 0;
+    const tokenIn = normalizeSwapSymbol($('symbolFrom').value);
+    const tokenOut = normalizeSwapSymbol($('symbolTo').value);
+    const fromBalance = swapTokenBalances[tokenIn] || 0;
+    const hasValidQuote = latestQuote && latestQuote.status === 'success';
+    const canSubmit = amount > 0 && tokenIn && tokenOut && tokenIn !== tokenOut && hasValidQuote && fromBalance >= amount;
+    $('swapBtn').disabled = !canSubmit;
+    if (amount > 0 && fromBalance < amount) {
+        $('swapResult').textContent = `Insufficient ${tokenIn} balance`;
+    }
+}
+
+async function calcTo() {
+    const fromVal = parseFloat($('amountFrom').value) || 0;
+    const tokenIn = normalizeSwapSymbol($('symbolFrom').value);
+    const tokenOut = normalizeSwapSymbol($('symbolTo').value);
+    latestQuote = null;
+    if (!fromVal || !tokenIn || !tokenOut || tokenIn === tokenOut) {
+        $('amountTo').value = '';
+        $('rateDisplay').textContent = '—';
+        $('swapBtn').disabled = true;
+        return;
+    }
+    if ((swapTokenBalances[tokenIn] || 0) < fromVal) {
+        $('amountTo').value = '';
+        $('rateDisplay').textContent = '—';
+        $('swapBtn').disabled = true;
+        $('swapResult').textContent = `Insufficient ${tokenIn} balance`;
+        return;
+    }
+    try {
+        const res = await fetch(`/api/swap/quote?token_in=${encodeURIComponent(tokenIn)}&token_out=${encodeURIComponent(tokenOut)}&amount_in=${encodeURIComponent(fromVal)}`);
+        const data = await res.json();
+        if (data.status !== 'success') {
+            $('amountTo').value = '';
+            $('rateDisplay').textContent = '—';
+            $('swapBtn').disabled = true;
+            $('swapResult').textContent = data.message || 'No liquidity';
+            return;
+        }
+        latestQuote = data;
+        $('amountTo').value = Number(data.amount_out).toFixed(6);
+        const rate = data.amount_out / fromVal;
+        $('rateDisplay').textContent = rate ? `1 ${tokenIn} = ${rate.toFixed(6)} ${tokenOut}` : '—';
+        $('swapResult').textContent = '';
+        refreshSwapButtonState();
+    } catch (e) {
+        $('amountTo').value = '';
+        $('rateDisplay').textContent = '—';
+        $('swapBtn').disabled = true;
+        console.error('Quote error', e);
+    }
+}
+
+async function doSwap() {
+    const amount = parseFloat($('amountFrom').value);
+    const tokenIn = normalizeSwapSymbol($('symbolFrom').value);
+    const tokenOut = normalizeSwapSymbol($('symbolTo').value);
+    const activeAddress = getSwapActiveWalletAddress();
+
+    if (!isSwapWalletReady(activeAddress)) {
+        alert("Wallet not connected");
+        return;
+    }
+    if (!window.WalletAuth || typeof window.WalletAuth.requireUnlockedWallet !== 'function') {
+        alert("missing_wallet_signing_material");
+        return;
+    }
+    
+    if (!amount || amount <= 0) {
+        alert("Enter a valid amount.");
+        return;
+    }
+    if ((swapTokenBalances[tokenIn] || 0) < amount) {
+        alert(`Insufficient ${tokenIn} balance.`);
+        return;
+    }
+    if (!latestQuote || latestQuote.status !== 'success') {
+        alert("No valid quote available.");
+        return;
+    }
+    
+    $('swapBtn').disabled = true;
+    $('swapBtn').innerHTML = '<span class="spinner"></span> Swapping...';
+    $('swapResult').textContent = "";
+    
+    try {
+        const auth = await window.WalletAuth.requireUnlockedWallet();
+        const addr = auth.address || activeAddress;
+        const txCore = {
+            type: 'swap',
+            trader_thr: addr,
+            token_in: tokenIn,
+            token_out: tokenOut,
+            amount_in: amount,
+            min_amount_out: latestQuote.amount_out
+        };
+        const signedSwap = auth.signTransaction ? await auth.signTransaction(txCore) : null;
+        const res = await fetch('/api/swap/execute', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                trader_thr: addr,
+                credential_lookup_address: auth.credentialLookupAddress || addr,
+                public_key: auth.getPublicKey ? auth.getPublicKey() : '',
+                signed_tx: signedSwap,
+                signature: typeof signedSwap === 'string' ? signedSwap : signedSwap && signedSwap.signature,
+                auth_secret: auth.authSecret,
+                token_in: tokenIn,
+                token_out: tokenOut,
+                amount_in: amount,
+                min_amount_out: latestQuote.amount_out
+            })
+        });
+        const rawText = await res.text();
+        let data = {};
+        try {
+            data = rawText ? JSON.parse(rawText) : {};
+        } catch (e) {
+            data = { status: 'error', message: rawText || `HTTP ${res.status}` };
+        }
+
+        if (res.ok && data.status === 'success') {
+            $('swapResult').style.color = '#0f0';
+            $('swapResult').textContent = `✅ Swap Successful!\nTXID: ${data.tx_id}`;
+            await loadBalances(addr);
+            $('amountFrom').value = '';
+            $('amountTo').value = '';
+        } else {
+            $('swapResult').style.color = '#f00';
+            const statusLine = res.status ? `HTTP ${res.status}` : 'Error';
+            $('swapResult').textContent = `❌ ${statusLine}: ${data.message || rawText || 'Unknown error'}`;
+        }
+    } catch (e) {
+        $('swapResult').style.color = '#f00';
+        const missing = e && (e.message === 'missing_wallet_signing_material' || e.message?.includes('missing_wallet_signing_material'));
+        $('swapResult').textContent = `❌ Error: ${missing ? 'missing_wallet_signing_material' : e.message}`;
+    } finally {
+        $('swapBtn').disabled = false;
+        $('swapBtn').textContent = "Swap";
+        refreshSwapButtonState();
+    }
+}
+
+window.flipTokens = flipTokens;
+window.onTokenChange = onTokenChange;
+window.calcTo = calcTo;
+window.doSwap = doSwap;
+})();
+</script>
+{% endblock %}

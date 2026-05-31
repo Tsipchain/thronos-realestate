@@ -1,0 +1,694 @@
+{% extends "base.html" %}
+
+{% block title %}📜 Thronos Whitepaper{% endblock %}
+
+{% block styles %}
+<style>
+    .wp-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #d7ffe6;
+    }
+    .wp-header {
+        text-align: center;
+        padding: 50px 30px;
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        border: 1px solid #00ff66;
+        border-radius: 20px;
+        margin-bottom: 40px;
+    }
+    .wp-header h1 {
+        color: #00ff66;
+        font-size: 3em;
+        margin: 0;
+        text-shadow: 0 0 30px rgba(0, 255, 102, 0.4);
+        letter-spacing: 3px;
+        font-family: 'Courier New', monospace;
+    }
+    .wp-header .subtitle {
+        color: #d7ffe6;
+        font-size: 1.2em;
+        margin-top: 15px;
+        opacity: 0.9;
+    }
+    .wp-header .tagline {
+        color: #00ff66;
+        font-style: italic;
+        margin-top: 20px;
+        font-size: 1.1em;
+    }
+    .btn-download {
+        display: inline-block;
+        background: #06140b;
+        color: #00ff66;
+        padding: 12px 25px;
+        margin-top: 25px;
+        font-weight: bold;
+        text-decoration: none;
+        border: 1px solid #3CFF7A;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    .btn-download:hover {
+        background: #3CFF7A;
+        color: #000;
+        box-shadow: 0 0 20px rgba(0, 255, 102, 0.4);
+    }
+    .section {
+        background: #07120b;
+        border: 1px solid #1a5a2f;
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 25px;
+    }
+    .section h2 {
+        color: #00ff66;
+        margin-top: 0;
+        font-size: 1.8em;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid #1a5a2f;
+        padding-bottom: 15px;
+    }
+    .section h3 {
+        color: #5C9FFF;
+        margin-top: 25px;
+    }
+    .section p, .section li {
+        line-height: 1.8;
+        opacity: 0.95;
+    }
+    .section ul {
+        padding-left: 20px;
+    }
+    .section li {
+        margin-bottom: 12px;
+    }
+    .highlight-box {
+        background: rgba(0, 255, 102, 0.1);
+        border-left: 4px solid #3CFF7A;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 10px 10px 0;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin: 25px 0;
+    }
+    .stat-card {
+        background: #050b07;
+        border: 1px solid #1a5a2f;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+    }
+    .stat-card .value {
+        color: #00ff66;
+        font-size: 2em;
+        font-weight: bold;
+    }
+    .stat-card .label {
+        color: #d7ffe6;
+        font-size: 0.9em;
+        opacity: 0.8;
+        margin-top: 5px;
+    }
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+        margin: 25px 0;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: linear-gradient(to bottom, #3CFF7A, #1a5a2f);
+        border-radius: 2px;
+    }
+    .timeline-item {
+        position: relative;
+        padding: 15px 0 15px 25px;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -34px;
+        top: 20px;
+        width: 12px;
+        height: 12px;
+        background: #3CFF7A;
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+    }
+    .timeline-item .year {
+        color: #00ff66;
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+    }
+    .feature-card {
+        background: #050b07;
+        border: 1px solid #1a5a2f;
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.3s;
+    }
+    .feature-card:hover {
+        border-color: #00ff66;
+        transform: translateY(-3px);
+    }
+    .feature-card h4 {
+        color: #00ff66;
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .feature-card p {
+        margin: 0;
+        font-size: 0.95em;
+        opacity: 0.85;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+    }
+    th, td {
+        border: 1px solid #1a5a2f;
+        padding: 12px 15px;
+        text-align: left;
+    }
+    th {
+        background: #050b07;
+        color: #00ff66;
+    }
+    td {
+        background: #07120b;
+    }
+    code {
+        background: rgba(0, 255, 102, 0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #00ff66;
+        font-family: monospace;
+    }
+    .toc {
+        background: #050b07;
+        border: 1px solid #1a5a2f;
+        border-radius: 12px;
+        padding: 20px 30px;
+        margin-bottom: 30px;
+    }
+    .toc h3 {
+        color: #00ff66;
+        margin-top: 0;
+    }
+    .toc ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        columns: 2;
+    }
+    .toc li {
+        margin: 8px 0;
+    }
+    .toc a {
+        color: #d7ffe6;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+    .toc a:hover {
+        color: #00ff66;
+    }
+    @media (max-width: 768px) {
+        .toc ul { columns: 1; }
+        .wp-header h1 { font-size: 2em; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wp-container">
+    <!-- Header -->
+    <div class="wp-header">
+        <h1>THRONOS CHAIN</h1>
+        <div class="subtitle">
+            <span class="lang-el">Λευκή Βίβλος & Τεχνική Τεκμηρίωση</span>
+            <span class="lang-en">Whitepaper & Technical Documentation</span>
+        </div>
+        <div class="tagline">
+            "Pledge to the unburnable • Strength in every link, light in every Block"
+        </div>
+        <a href="/static/Thronos_Whitepaper.pdf" class="btn-download" download>
+            ⬇️ <span class="lang-el">Λήψη PDF</span><span class="lang-en">Download PDF</span>
+        </a>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="toc">
+        <h3>📑 <span class="lang-el">Περιεχόμενα</span><span class="lang-en">Contents</span></h3>
+        <ul>
+            <li><a href="#history">🏛️ <span class="lang-el">Η Ιστορία μας</span><span class="lang-en">Our Story</span></a></li>
+            <li><a href="#intro">🔥 <span class="lang-el">Εισαγωγή</span><span class="lang-en">Introduction</span></a></li>
+            <li><a href="#tech">⚙️ <span class="lang-el">Τεχνολογία</span><span class="lang-en">Technology</span></a></li>
+            <li><a href="#economy">💰 <span class="lang-el">Οικονομία</span><span class="lang-en">Economy</span></a></li>
+            <li><a href="#ecosystem">🌐 <span class="lang-el">Οικοσύστημα</span><span class="lang-en">Ecosystem</span></a></li>
+            <li><a href="#services">🔗 <span class="lang-el">Ecosystem Services</span><span class="lang-en">Ecosystem Services</span></a></li>
+            <li><a href="#ai">🤖 <span class="lang-el">AI & Machine Learning</span><span class="lang-en">AI & Machine Learning</span></a></li>
+            <li><a href="#smartcity">🏙️ <span class="lang-el">Smart City</span><span class="lang-en">Smart City</span></a></li>
+            <li><a href="#tokenomics">📈 Tokenomics</a></li>
+            <li><a href="#security">🛡️ <span class="lang-el">Ασφάλεια</span><span class="lang-en">Security</span></a></li>
+            <li><a href="#roadmap">🗺️ Roadmap</a></li>
+        </ul>
+    </div>
+
+    <!-- Our Story / History -->
+    <div class="section" id="history">
+        <h2>🏛️ <span class="lang-el">Η Ιστορία του Thronos</span><span class="lang-en">The Story of Thronos</span></h2>
+
+        <div class="highlight-box">
+            <span class="lang-el">Το Thronos γεννήθηκε από ένα όραμα: να δημιουργήσουμε ένα blockchain που θα επιβιώσει σε κάθε συνθήκη - ακόμα και χωρίς internet.</span>
+            <span class="lang-en">Thronos was born from a vision: to create a blockchain that survives any condition - even without internet.</span>
+        </div>
+
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="year">2023 - <span class="lang-el">Η Αρχή</span><span class="lang-en">The Beginning</span></div>
+                <p>
+                    <span class="lang-el">Ξεκινήσαμε με μια απλή ερώτηση: "Τι θα γινόταν αν το internet έπεφτε αύριο;". Από αυτή την ερώτηση γεννήθηκε το Thronos - ένα blockchain σχεδιασμένο για απόλυτη ανθεκτικότητα.</span>
+                    <span class="lang-en">We started with a simple question: "What would happen if the internet went down tomorrow?". From this question, Thronos was born - a blockchain designed for absolute resilience.</span>
+                </p>
+            </div>
+            <div class="timeline-item">
+                <div class="year">2024 - <span class="lang-el">Έκδοση 1.0 & 2.0</span><span class="lang-en">Version 1.0 & 2.0</span></div>
+                <p>
+                    <span class="lang-el">Ανάπτυξη του core blockchain με SHA256, steganography (PhantomFace), και ραδιοεπικοινωνίες (RadioNode). Δημιουργία του πρώτου P2P δικτύου.</span>
+                    <span class="lang-en">Development of core blockchain with SHA256, steganography (PhantomFace), and radio communications (RadioNode). Creation of the first P2P network.</span>
+                </p>
+            </div>
+            <div class="timeline-item">
+                <div class="year">2024-2025 - <span class="lang-el">Έκδοση 3.0+</span><span class="lang-en">Version 3.0+</span></div>
+                <p>
+                    <span class="lang-el">Προσθήκη DeFi (AMM, Liquidity Pools), AI Integration, Music Platform, Learn-to-Earn, Smart Contracts (EVM), και πλήρες οικοσύστημα εφαρμογών.</span>
+                    <span class="lang-en">Addition of DeFi (AMM, Liquidity Pools), AI Integration, Music Platform, Learn-to-Earn, Smart Contracts (EVM), and complete application ecosystem.</span>
+                </p>
+            </div>
+            <div class="timeline-item">
+                <div class="year">2025-2026 - <span class="lang-el">Mainnet & Οικοσύστημα</span><span class="lang-en">Mainnet & Ecosystem</span></div>
+                <p>
+                    <span class="lang-el">100+ API endpoints, 47+ σελίδες, πλήρες DeFi ecosystem, BTC Pledge system, VerifyID, Pythia AI training, Stratum mining (ASIC/CPU/GPU), Mobile SDKs, Chrome Extension, 4+ live nodes (Master, Replica, Vercel, AI Core) + ecosystem services (Gateway, Sentinel, Commerce, CareerForge, Builder), 50K+ γραμμές κώδικα, 435+ PRs.</span>
+                    <span class="lang-en">100+ API endpoints, 47+ pages, complete DeFi ecosystem, BTC Pledge system, VerifyID, Pythia AI training, Stratum mining (ASIC/CPU/GPU), Mobile SDKs, Chrome Extension, 4+ live nodes (Master, Replica, Vercel, AI Core) + ecosystem services (Gateway, Sentinel, Commerce, CareerForge, Builder), 50K+ lines of code, 435+ PRs.</span>
+                </p>
+            </div>
+        </div>
+
+        <h3><span class="lang-el">Γιατί "Thronos";</span><span class="lang-en">Why "Thronos"?</span></h3>
+        <p>
+            <span class="lang-el">Το όνομα "Thronos" (Θρόνος) συμβολίζει την σταθερότητα, την εξουσία του χρήστη πάνω στα δικά του assets, και την αμετακίνητη θέση του δικτύου. Όπως ένας θρόνος δεν κουνιέται, έτσι και το Thronos παραμένει σταθερό ακόμα και στις πιο ακραίες συνθήκες.</span>
+            <span class="lang-en">The name "Thronos" (Throne) symbolizes stability, user sovereignty over their own assets, and the network's unshakeable position. Just as a throne doesn't move, Thronos remains stable even in the most extreme conditions.</span>
+        </p>
+    </div>
+
+    <!-- Introduction -->
+    <div class="section" id="intro">
+        <h2>🔥 <span class="lang-el">Εισαγωγή</span><span class="lang-en">Introduction</span></h2>
+        <p>
+            <span class="lang-el">Το Thronos Chain είναι ένα καινοτόμο blockchain επόμενης γενιάς, σχεδιασμένο για πλήρη ανθεκτικότητα, αποκέντρωση και επιβίωση. Συνδυάζει την ασφάλεια του Bitcoin (SHA256), την ταχύτητα του XRP, με μοναδικές δυνατότητες που δεν έχει κανένα άλλο blockchain.</span>
+            <span class="lang-en">Thronos Chain is an innovative next-generation blockchain designed for complete resilience, decentralization, and survival. It combines Bitcoin's security (SHA256), XRP's speed, with unique capabilities no other blockchain has.</span>
+        </p>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="value">100+</div>
+                <div class="label"><span class="lang-el">API Endpoints</span><span class="lang-en">API Endpoints</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="value">47+</div>
+                <div class="label"><span class="lang-el">Σελίδες Εφαρμογών</span><span class="lang-en">App Pages</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="value">21M</div>
+                <div class="label"><span class="lang-el">Μέγιστη Προσφορά</span><span class="lang-en">Max Supply</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="value">SHA256</div>
+                <div class="label"><span class="lang-el">Αλγόριθμος</span><span class="lang-en">Algorithm</span></div>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <strong><span class="lang-el">Μοναδικά Χαρακτηριστικά:</span><span class="lang-en">Unique Features:</span></strong>
+            <ul style="margin: 10px 0 0 0;">
+                <li><span class="lang-el">Offline λειτουργία μέσω ραδιοκυμάτων (RadioNode)</span><span class="lang-en">Offline operation via radio waves (RadioNode)</span></li>
+                <li><span class="lang-el">Κρυφές συναλλαγές μέσα σε εικόνες (PhantomFace)</span><span class="lang-en">Hidden transactions in images (PhantomFace)</span></li>
+                <li><span class="lang-el">Ενσωματωμένο AI (ThronosAI)</span><span class="lang-en">Built-in AI (ThronosAI)</span></li>
+                <li><span class="lang-el">Layer 1 DeFi χωρίς smart contracts</span><span class="lang-en">Layer 1 DeFi without smart contracts</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Technology -->
+    <div class="section" id="tech">
+        <h2>⚙️ <span class="lang-el">Τεχνικά Χαρακτηριστικά</span><span class="lang-en">Technical Specifications</span></h2>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🔐 SHA256</h4>
+                <p><span class="lang-el">Συμβατότητα με Bitcoin miners (Antminers) για αποκεντρωμένο mining</span><span class="lang-en">Compatible with Bitcoin miners (Antminers) for decentralized mining</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>⚡ <span class="lang-el">Άμεση Επιβεβαίωση</span><span class="lang-en">Instant Finality</span></h4>
+                <p><span class="lang-el">Συναλλαγές επιβεβαιώνονται σε δευτερόλεπτα μέσω ασύγχρονου syncing</span><span class="lang-en">Transactions confirmed in seconds via asynchronous syncing</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>📻 RadioNode</h4>
+                <p><span class="lang-el">Μετάδοση συναλλαγών μέσω ραδιοκυμάτων - λειτουργεί χωρίς internet</span><span class="lang-en">Transaction broadcast via radio waves - works without internet</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>🖼️ PhantomFace</h4>
+                <p><span class="lang-el">Steganography - κρύψε συναλλαγές μέσα σε εικόνες</span><span class="lang-en">Steganography - hide transactions inside images</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>🔊 WhisperNote</h4>
+                <p><span class="lang-el">Μετάδοση δεδομένων μέσω ήχου - ultrasonic frequencies</span><span class="lang-en">Data transmission via audio - ultrasonic frequencies</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>🌐 P2P Network</h4>
+                <p><span class="lang-el">Πλήρως αποκεντρωμένο peer-to-peer δίκτυο</span><span class="lang-en">Fully decentralized peer-to-peer network</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Economy & DeFi -->
+    <div class="section" id="economy">
+        <h2>💰 <span class="lang-el">Οικονομία & DeFi</span><span class="lang-en">Economy & DeFi</span></h2>
+        <p>
+            <span class="lang-el">Το Thronos ενσωματώνει προηγμένα οικονομικά εργαλεία απευθείας στο πρωτόκολλο (Layer 1 DeFi).</span>
+            <span class="lang-en">Thronos integrates advanced financial tools directly into the protocol (Layer 1 DeFi).</span>
+        </p>
+
+        <table>
+            <tr>
+                <th><span class="lang-el">Χαρακτηριστικό</span><span class="lang-en">Feature</span></th>
+                <th><span class="lang-el">Περιγραφή</span><span class="lang-en">Description</span></th>
+            </tr>
+            <tr>
+                <td><strong>Dynamic Fees</strong></td>
+                <td><span class="lang-el">0.5% burn ανά συναλλαγή - deflationary μηχανισμός</span><span class="lang-en">0.5% burn per transaction - deflationary mechanism</span></td>
+            </tr>
+            <tr>
+                <td><strong>Native Swap</strong></td>
+                <td><span class="lang-el">AMM για ανταλλαγή THR ↔ wBTC χωρίς μεσάζοντες</span><span class="lang-en">AMM for THR ↔ wBTC exchange without intermediaries</span></td>
+            </tr>
+            <tr>
+                <td><strong>Liquidity Pools</strong></td>
+                <td><span class="lang-el">Παροχή ρευστότητας με LP tokens και referral bonuses</span><span class="lang-en">Provide liquidity with LP tokens and referral bonuses</span></td>
+            </tr>
+            <tr>
+                <td><strong>BTC Bridge</strong></td>
+                <td><span class="lang-el">Γέφυρα Bitcoin με 1 THR = 0.0001 BTC peg</span><span class="lang-en">Bitcoin bridge with 1 THR = 0.0001 BTC peg</span></td>
+            </tr>
+            <tr>
+                <td><strong>L2E Token</strong></td>
+                <td><span class="lang-el">Learn-to-Earn token για εκπαιδευτικές ανταμοιβές</span><span class="lang-en">Learn-to-Earn token for educational rewards</span></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Ecosystem -->
+    <div class="section" id="ecosystem">
+        <h2>🌐 <span class="lang-el">Οικοσύστημα Εφαρμογών</span><span class="lang-en">Application Ecosystem</span></h2>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🎵 Music Platform</h4>
+                <p><span class="lang-el">Καλλιτέχνες ανεβάζουν μουσική, λαμβάνουν royalties σε THR ανά play</span><span class="lang-en">Artists upload music, receive THR royalties per play</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>🎓 Learn-to-Earn</h4>
+                <p><span class="lang-el">Μάθε για blockchain, κέρδισε L2E tokens. Με σύστημα quizzes!</span><span class="lang-en">Learn about blockchain, earn L2E tokens. With quiz system!</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>📜 Smart Contracts</h4>
+                <p><span class="lang-el">EVM-compatible contracts με template library</span><span class="lang-en">EVM-compatible contracts with template library</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>🪙 Token Factory</h4>
+                <p><span class="lang-el">Δημιούργησε τα δικά σου tokens με custom logo</span><span class="lang-en">Create your own tokens with custom logo</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>💧 DeFi Pools</h4>
+                <p><span class="lang-el">Liquidity pools με AMM, swaps, και referrals</span><span class="lang-en">Liquidity pools with AMM, swaps, and referrals</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>🎮 DApp Playground</h4>
+                <p><span class="lang-el">Πειραματίσου με smart contracts και APIs</span><span class="lang-en">Experiment with smart contracts and APIs</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ecosystem Services -->
+    <div class="section" id="services">
+        <h2>🔗 <span class="lang-el">Ecosystem Services</span><span class="lang-en">Ecosystem Services</span></h2>
+        <p>
+            <span class="lang-el">Το Thronos ecosystem αποτελείται από 10+ αυτόνομα repositories που λειτουργούν ως microservices:</span>
+            <span class="lang-en">The Thronos ecosystem consists of 10+ autonomous repositories operating as microservices:</span>
+        </p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>💳 Thronos Gateway</h4>
+                <p><span class="lang-el">Payment orchestration, Stripe integration, fiat on/off ramp, subscription management</span><span class="lang-en">Payment orchestration, Stripe integration, fiat on/off ramp, subscription management</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>📈 Trader Sentinel</h4>
+                <p><span class="lang-el">AI AutoTrader με Sleep Mode (48h), hedge/DCA protection, multi-exchange (MEXC, Binance, Bybit, OKX), spot & futures trading</span><span class="lang-en">AI AutoTrader with Sleep Mode (48h), hedge/DCA protection, multi-exchange (MEXC, Binance, Bybit, OKX), spot & futures trading</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>🛒 Thronos Commerce</h4>
+                <p><span class="lang-el">E-commerce platform με THR πληρωμές, product catalog, order management</span><span class="lang-en">E-commerce platform with THR payments, product catalog, order management</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>📱 ThronosBuilder</h4>
+                <p><span class="lang-el">Mobile app builder, APK generation pipeline, signing & distribution</span><span class="lang-en">Mobile app builder, APK generation pipeline, signing & distribution</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>💼 CareerForge AI</h4>
+                <p><span class="lang-el">AI job matching, CV analysis, interview prep, AI credits integration</span><span class="lang-en">AI job matching, CV analysis, interview prep, AI credits integration</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>🆔 VerifyID</h4>
+                <p><span class="lang-el">On-chain KYC με BTC pledge, steganographic contracts, ASIC PoW attestation</span><span class="lang-en">On-chain KYC with BTC pledge, steganographic contracts, ASIC PoW attestation</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>🚗 Driver Platform</h4>
+                <p><span class="lang-el">GPS telemetry, autonomous driving training data, T2E rewards, vehicle nodes</span><span class="lang-en">GPS telemetry, autonomous driving training data, T2E rewards, vehicle nodes</span></p>
+            </div>
+            <div class="feature-card">
+                <h4>🤖 Discord Bot</h4>
+                <p><span class="lang-el">Community integration, THR balance queries, governance notifications</span><span class="lang-en">Community integration, THR balance queries, governance notifications</span></p>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <strong><span class="lang-el">Multi-Chain Υποστήριξη:</span><span class="lang-en">Multi-Chain Support:</span></strong>
+            <span class="lang-el">Ethereum, BSC, Polygon, Arbitrum μέσω EVM bridge integration.</span>
+            <span class="lang-en">Ethereum, BSC, Polygon, Arbitrum via EVM bridge integration.</span>
+        </div>
+    </div>
+
+    <!-- AI -->
+    <div class="section" id="ai">
+        <h2>🤖 AI & Machine Learning</h2>
+        <p>
+            <span class="lang-el">Το Thronos ενσωματώνει έναν προηγμένο AI Agent (ThronosAI) που λειτουργεί ως "Αρχιτέκτονας" του δικτύου.</span>
+            <span class="lang-en">Thronos integrates an advanced AI Agent (ThronosAI) acting as the network's "Architect".</span>
+        </p>
+
+        <ul>
+            <li><span class="lang-el"><strong>Architect Interface</strong>: Πλήρωσε THR για AI code generation, ai_reward στους providers</span><span class="lang-en"><strong>Architect Interface</strong>: Pay THR for AI code generation, ai_reward to providers</span></li>
+            <li><span class="lang-el"><strong>AI Credits (Chat)</strong>: Πλήρωσε THR → chat credits για Pythia chatbot</span><span class="lang-en"><strong>AI Credits (Chat)</strong>: Pay THR → chat credits for Pythia chatbot</span></li>
+            <li><span class="lang-el"><strong>Train-to-Earn (T2E)</strong>: Κέρδισε tokens συνεισφέροντας training data στο <code>ai_training_buffer.jsonl</code></span><span class="lang-en"><strong>Train-to-Earn (T2E)</strong>: Earn tokens by contributing training data to <code>ai_training_buffer.jsonl</code></span></li>
+            <li><span class="lang-el"><strong>Pythia Agent</strong>: Node 4 AI core σε Render, multi-model (Gemini, OpenAI, Anthropic), auto-fallback</span><span class="lang-en"><strong>Pythia Agent</strong>: Node 4 AI core on Render, multi-model (Gemini, OpenAI, Anthropic), auto-fallback</span></li>
+            <li><span class="lang-el"><strong>On-Chain Training</strong>: Η γνώση του AI καταγράφεται στο blockchain ως <code>ai_knowledge</code></span><span class="lang-en"><strong>On-Chain Training</strong>: AI knowledge recorded on blockchain as <code>ai_knowledge</code></span></li>
+            <li><span class="lang-el"><strong>Quantum Chat</strong>: Encrypted P2P chat με AI integration</span><span class="lang-en"><strong>Quantum Chat</strong>: Encrypted P2P chat with AI integration</span></li>
+        </ul>
+    </div>
+
+    <!-- Smart City -->
+    <div class="section" id="smartcity">
+        <h2>🏙️ Smart City & IoT</h2>
+        <p>
+            <span class="lang-el">Το Thronos λειτουργεί ως το λειτουργικό σύστημα για έξυπνες πόλεις.</span>
+            <span class="lang-en">Thronos acts as the operating system for smart cities.</span>
+        </p>
+
+        <ul>
+            <li><span class="lang-el"><strong>Smart Parking</strong>: Διαχείριση θέσεων στάθμευσης με πληρωμές THR</span><span class="lang-en"><strong>Smart Parking</strong>: Parking spot management with THR payments</span></li>
+            <li><span class="lang-el"><strong>Water Management</strong>: Παρακολούθηση υδάτων μέσω IoT sensors</span><span class="lang-en"><strong>Water Management</strong>: Water monitoring via IoT sensors</span></li>
+            <li><span class="lang-el"><strong>Vehicle Nodes</strong>: Οχήματα ως κινητοί κόμβοι του δικτύου</span><span class="lang-en"><strong>Vehicle Nodes</strong>: Vehicles as mobile network nodes</span></li>
+            <li><span class="lang-el"><strong>Energy Grid</strong>: Peer-to-peer trading ενέργειας</span><span class="lang-en"><strong>Energy Grid</strong>: Peer-to-peer energy trading</span></li>
+        </ul>
+    </div>
+
+    <!-- Tokenomics -->
+    <div class="section" id="tokenomics">
+        <h2>📈 Tokenomics</h2>
+
+        <table>
+            <tr><th><span class="lang-el">Παράμετρος</span><span class="lang-en">Parameter</span></th><th><span class="lang-el">Τιμή</span><span class="lang-en">Value</span></th></tr>
+            <tr><td>Token Symbol</td><td>THR</td></tr>
+            <tr><td>Max Supply</td><td>21,000,001</td></tr>
+            <tr><td>Algorithm</td><td>SHA256 (ASIC & CPU)</td></tr>
+            <tr><td>Block Time</td><td>~10 seconds</td></tr>
+            <tr><td>Halving</td><td><span class="lang-el">Κάθε 4 χρόνια</span><span class="lang-en">Every 4 years</span></td></tr>
+            <tr><td>BTC Peg</td><td>1 THR = 0.0001 BTC (soft peg)</td></tr>
+            <tr><td>Burn Rate</td><td>0.5% <span class="lang-el">ανά συναλλαγή</span><span class="lang-en">per transaction</span></td></tr>
+        </table>
+
+        <h3><span class="lang-el">Διανομή</span><span class="lang-en">Distribution</span></h3>
+        <ul>
+            <li><strong>80%</strong> - Mining Rewards</li>
+            <li><strong>10%</strong> - AI Treasury</li>
+            <li><strong>10%</strong> - Burn Mechanism</li>
+        </ul>
+    </div>
+
+    <!-- Security -->
+    <div class="section" id="security">
+        <h2>🛡️ <span class="lang-el">Ασφάλεια</span><span class="lang-en">Security</span></h2>
+
+        <ul>
+            <li><span class="lang-el"><strong>Persistent Wallet</strong>: Ασφαλής διαχείριση κλειδιών στον browser</span><span class="lang-en"><strong>Persistent Wallet</strong>: Secure in-browser key management</span></li>
+            <li><span class="lang-el"><strong>Open Source</strong>: Ο κώδικας είναι ανοιχτός και ελέγξιμος</span><span class="lang-en"><strong>Open Source</strong>: Code is open and auditable</span></li>
+            <li><span class="lang-el"><strong>Quorum Consensus</strong>: Πολλαπλοί validators για κάθε block</span><span class="lang-en"><strong>Quorum Consensus</strong>: Multiple validators for each block</span></li>
+            <li><span class="lang-el"><strong>Chrome Extension</strong>: Secure wallet με dApp integration</span><span class="lang-en"><strong>Chrome Extension</strong>: Secure wallet with dApp integration</span></li>
+            <li><span class="lang-el"><strong>Mobile SDKs</strong>: React Native, iOS, Android support</span><span class="lang-en"><strong>Mobile SDKs</strong>: React Native, iOS, Android support</span></li>
+        </ul>
+
+        <h3>🛡️ <span class="lang-el">KYC/AML Compliance & CEX Integration Architecture</span><span class="lang-en">KYC/AML Compliance & CEX Integration Architecture</span></h3>
+
+        <p>
+            <span class="lang-el"><strong>Πρόβλημα CEX:</strong> Οι ανταλλαγές κρυπτονομισμάτων (MEXC, Binance, Kraken κλπ.) χρησιμοποιούν ξεχωριστές διευθύνσεις κατάθεσης ανά χρήστη (μοναδικές), αλλά κοινές "hot wallets" για όλες τις αναλήψεις χρηστών (κοινόχρηστες). Αυτό σημαίνει ότι δεν μπορούμε να επαληθεύσουμε τον αποστολέα μόνο από τη διεύθυνση της συναλλαγής.</span>
+            <span class="lang-en"><strong>CEX Problem:</strong> Cryptocurrency exchanges (MEXC, Binance, Kraken, etc.) use separate deposit addresses per user (unique), but shared "hot wallets" for all user withdrawals (shared). This means we cannot verify the sender by transaction address alone.</span>
+        </p>
+
+        <p>
+            <span class="lang-el"><strong>Λύση:</strong> 4-φάσιο αρχιτεκτονικό πλάνο που εξελίσσεται από απλή blocklist σε πλήρη CEX API integration:</span>
+            <span class="lang-en"><strong>Solution:</strong> 4-phase architectural plan that evolves from simple blocklist to full CEX API integration:</span>
+        </p>
+
+        <div class="highlight-box">
+            <strong><span class="lang-el">Φάση 1A: Blocklist Validator (LIVE ✅)</span><span class="lang-en">Phase 1A: Blocklist Validator (LIVE ✅)</span></strong>
+            <ul style="margin: 10px 0 0 0;">
+                <li><span class="lang-el">Τρέχουσα κατάσταση: Αποκλεισμός γνωστών CEX hot wallet addresses</span><span class="lang-en">Current: Block known CEX hot wallet addresses</span></li>
+                <li><span class="lang-el">cex_validator.py module με KNOWN_CEX_WALLETS dict για MEXC, Binance, Kraken, Coinbase, OKX, Huobi</span><span class="lang-en">cex_validator.py module with KNOWN_CEX_WALLETS dict for MEXC, Binance, Kraken, Coinbase, OKX, Huobi</span></li>
+                <li><span class="lang-el">Enforcement σε pledge_submit.py endpoint με 403 Forbidden απορριψη</span><span class="lang-en">Enforcement in pledge_submit.py endpoint with 403 Forbidden rejection</span></li>
+                <li><span class="lang-el">UI warning banner στο pledge.html με 5-step οδηγίες για withdrawal σε personal wallet</span><span class="lang-en">UI warning banner in pledge.html with 5-step instructions to withdraw to personal wallet</span></li>
+                <li><span class="lang-el">Graceful degradation αν module unavailable</span><span class="lang-en">Graceful degradation if module unavailable</span></li>
+            </ul>
+        </div>
+
+        <div class="highlight-box">
+            <strong><span class="lang-el">Φάση 1B: BIP32 Unique Deposit Addresses (TARGET: May 17-18)</span><span class="lang-en">Phase 1B: BIP32 Unique Deposit Addresses (TARGET: May 17-18)</span></strong>
+            <ul style="margin: 10px 0 0 0;">
+                <li><span class="lang-el">Δημιουργία διαφορετικής deposit address ανά χρήστη χρησιμοποιώντας BIP32 derivation</span><span class="lang-en">Create unique per-user deposit address using BIP32 derivation</span></li>
+                <li><span class="lang-el">Ίδιο ιδιωτικό κλειδί παράγει ξεχωριστές addresses για MEXC, Binance, κλπ.</span><span class="lang-en">Same private key generates separate addresses for MEXC, Binance, etc.</span></li>
+                <li><span class="lang-el">Verification: αποστολέας χρησιμοποιεί ίδια κλειδί = verified identity</span><span class="lang-en">Verification: sender uses same key = verified identity</span></li>
+            </ul>
+        </div>
+
+        <div class="highlight-box">
+            <strong><span class="lang-el">Φάση 2: Signature & Payload Verification (TARGET: May 19-24, June 1-15)</span><span class="lang-en">Phase 2: Signature & Payload Verification (TARGET: May 19-24, June 1-15)</span></strong>
+            <ul style="margin: 10px 0 0 0;">
+                <li><span class="lang-el">Payload verification system: BTC client υπογράφει (bitcoin_message_sign) deposit payload</span><span class="lang-en">Payload verification system: BTC client signs (bitcoin_message_sign) deposit payload</span></li>
+                <li><span class="lang-el">Bridge ενδιάμεσο επαληθεύει υπογραφή με ECDSA verification</span><span class="lang-en">Bridge intermediate verifies signature with ECDSA verification</span></li>
+                <li><span class="lang-el">Προαπαιτούμενα: Phase 1B BIP32 derivation επιτυχία</span><span class="lang-en">Prerequisite: Phase 1B BIP32 derivation success</span></li>
+            </ul>
+        </div>
+
+        <div class="highlight-box">
+            <strong><span class="lang-el">Φάση 3: Stellar Bridge & Low-Cost Transfers (TARGET: May 25-31, June 1-15)</span><span class="lang-en">Phase 3: Stellar Bridge & Low-Cost Transfers (TARGET: May 25-31, June 1-15)</span></strong>
+            <ul style="margin: 10px 0 0 0;">
+                <li><span class="lang-el">Stellar network integration για χαμηλού κόστους bridge: Thronos ↔ Stellar ↔ USDC/USDT</span><span class="lang-en">Stellar network integration for low-cost bridge: Thronos ↔ Stellar ↔ USDC/USDT</span></li>
+                <li><span class="lang-el">Async queue-based processing με exponential backoff retry logic</span><span class="lang-en">Async queue-based processing with exponential backoff retry logic</span></li>
+                <li><span class="lang-el">Direct CEX bridge: USDC ↔ Binance/Kraken</span><span class="lang-en">Direct CEX bridge: USDC ↔ Binance/Kraken</span></li>
+            </ul>
+        </div>
+
+        <div class="highlight-box">
+            <strong><span class="lang-el">Φάση 4: Full CEX API Integration (TARGET: June 1-30)</span><span class="lang-en">Phase 4: Full CEX API Integration (TARGET: June 1-30)</span></strong>
+            <ul style="margin: 10px 0 0 0;">
+                <li><span class="lang-el">Πλήρης CEX API integration: MEXC, Binance, Kraken, Bybit, OKX</span><span class="lang-en">Full CEX API integration: MEXC, Binance, Kraken, Bybit, OKX</span></li>
+                <li><span class="lang-el">Autonomous agent handles withdrawals, KYC verification, AML compliance checks</span><span class="lang-en">Autonomous agent handles withdrawals, KYC verification, AML compliance checks</span></li>
+                <li><span class="lang-el">Αντικατάσταση manual bridge με πλήρως αυτοματοποιημένο σύστημα</span><span class="lang-en">Replace manual bridge with fully automated system</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Roadmap -->
+    <div class="section" id="roadmap">
+        <h2>🗺️ Roadmap</h2>
+        <p>
+            <span class="lang-el">Για λεπτομερές roadmap με progress bars, επισκεφθείτε:</span>
+            <span class="lang-en">For detailed roadmap with progress bars, visit:</span>
+            <a href="/roadmap" style="color: #00ff66;"> /roadmap</a>
+        </p>
+
+        <div class="highlight-box">
+            <strong><span class="lang-el">Τρέχουσα Κατάσταση (Q1 2026 - Mainnet Live):</span><span class="lang-en">Current Status (Q1 2026 - Mainnet Live):</span></strong>
+            <ul style="margin: 10px 0 0 0;">
+                <li>✅ Core Blockchain & P2P (53K+ blocks)</li>
+                <li>✅ DeFi (Pools, Swaps, AMM)</li>
+                <li>✅ Music Platform & L2E</li>
+                <li>✅ BTC Pledge System (KYC → THR address → PDF contract)</li>
+                <li>✅ BTC Pledge Watcher (Thronos BTC API + Blockstream fallback)</li>
+                <li>✅ Thronos BTC API Adapter (btc-api.thronoschain.org)</li>
+                <li>✅ Stratum Mining (Port 3334, ASIC/CPU/GPU compatible)</li>
+                <li>✅ VerifyID & Telemetry Integration</li>
+                <li>✅ Pythia AI Agent Training (T2E + feedback loop)</li>
+                <li>✅ Multi-Node Architecture (Master + Replica + AI Core)</li>
+                <li>✅ Admin Whitelist & Ecosystem Access Control</li>
+                <li>✅ Chrome Extension & Mobile SDKs</li>
+                <li>🔄 Automated BTC ↔ WBTC Bridge</li>
+            </ul>
+        </div>
+
+        <div class="highlight-box">
+            <strong><span class="lang-el">Learn2Earn (L2E) — Go-Live Rollout Verification:</span><span class="lang-en">Learn2Earn (L2E) — Go-Live Rollout Verification:</span></strong>
+            <ul style="margin: 10px 0 0 0;">
+                <li>✅ <span class="lang-el">Ολοκληρωμένο Core Infrastructure</span><span class="lang-en">Completed core infrastructure</span></li>
+                <li>✅ <span class="lang-el">Φάσεις 1–8: Ολοκληρωμένο ιστορικό υλοποίησης</span><span class="lang-en">Phases 1–8: Completed implementation history</span></li>
+                <li>🔍 <span class="lang-el">Τρέχον mode: Go-Live / rollout verification</span><span class="lang-en">Current mode: Go-Live / rollout verification</span></li>
+                <li>🧭 <span class="lang-el">Μελλοντικές εργασίες: refinement only (όχι νέο core architecture phase)</span><span class="lang-en">Future work: refinement only (not a new core architecture phase)</span></li>
+                <li>🔒 <span class="lang-el">Guardrails σταθερά: THR-first pricing, controlled reward issuance, RBAC/tenant/audit/policy boundaries</span><span class="lang-en">Guardrails remain fixed: THR-first pricing, controlled reward issuance, RBAC/tenant/audit/policy boundaries</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 50px; padding: 30px; opacity: 0.8;">
+        <p style="font-style: italic; font-size: 1.2em; color: #00ff66;">
+            "Forged in Fire, Secured by Code"
+        </p>
+        <p>
+            <a href="https://github.com/Tsipchain/thronos-V3.6" target="_blank" style="color: #d7ffe6;">GitHub</a> •
+            <a href="/docs" style="color: #d7ffe6;">API Docs</a> •
+            <a href="/roadmap" style="color: #d7ffe6;">Roadmap</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

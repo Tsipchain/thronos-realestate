@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Thronos Pledge System</title>
+  <style>
+    body { font-family: monospace; background: #111; color: #0f0; padding: 2em; }
+    textarea, input { width: 100%; padding: 0.5em; margin-top: 1em; background: #222; color: #0f0; border: 1px solid #0f0; }
+    button { margin-top: 1em; padding: 0.5em 1em; background: #0f0; color: #000; font-weight: bold; }
+    #output { margin-top: 2em; white-space: pre-wrap; word-wrap: break-word; background: #000; padding: 1em; border: 1px dashed #0f0; }
+  </style>
+</head>
+<body>
+
+<div style="background:#000;padding:10px;border-bottom:1px solid #0f0;text-align:center;">
+  <a href="/" style="color:#0f0;margin:10px;">🏠 Home</a>
+  <a href="/pledge" style="color:#0f0;margin:10px;">🔥 Pledge</a>
+  <a href="/viewer" style="color:#0f0;margin:10px;">📦 Viewer</a>
+  <a href="/send" style="color:#0f0;margin:10px;">💸 Send</a>
+  <a href="/wallet" style="color:#0f0;margin:10px;">👛 Wallet</a>
+  <a href="/docs" style="color:#0f0;margin:10px;">📚 Docs</a>
+</div>
+
+
+  <h1>🔥 Thronos Chain - Digital Pledge 🔥</h1>
+
+  <!-- CEX WARNING BANNER (Phase 1A) -->
+  <div style="background:#ff3333; color:#fff; padding:15px; margin:15px 0; border-left:4px solid #ff0000; border-radius:4px;">
+    <h3 style="margin-top:0; color:#fff;">⚠️ IMPORTANT: Do NOT Use Exchange (MEXC, Binance, Kraken)</h3>
+    <p style="margin:10px 0; font-size:14px;">
+      <strong>Direct CEX deposits are NOT allowed</strong> for security and KYC/AML compliance.<br>
+      Follow these steps instead:
+    </p>
+    <ol style="margin:10px 0; font-size:14px;">
+      <li>Login to MEXC/Binance/Kraken</li>
+      <li>Click "Withdraw" or "Send"</li>
+      <li>Send BTC to your <strong>personal wallet</strong> (MetaMask, Ledger, Rabby, Trust Wallet, etc.)</li>
+      <li>Wait for confirmation (5-30 minutes)</li>
+      <li>From your personal wallet, complete the pledge below</li>
+    </ol>
+    <p style="margin:10px 0; font-size:12px; opacity:0.9;">
+      <strong>Why?</strong> Exchanges use shared hot wallets. We can't verify your KYC that way.<br>
+      Personal wallet = unique address = verified identity ✅
+    </p>
+  </div>
+
+  <label>Paste your BTC Wallet Address:</label>
+  <div style="font-size:12px; opacity:0.8;">
+    BTC-only pledge → THR. Other chains are bridge/balance only.
+  </div>
+  <input type="text" id="btcAddress" placeholder="e.g. bc1q... or 1K...">
+
+  <label>Your Pledge Agreement:</label>
+  <textarea id="pledgeText" rows="8">I hereby pledge allegiance to the Thronos Chain. May fire and hash guide our path.</textarea>
+
+  <button onclick="generatePledge()">Sign & Generate Block</button>
+
+  <div id="output"></div>
+
+<script>
+function sha256(message) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(message);
+  return crypto.subtle.digest("SHA-256", data).then(hash => {
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+  });
+}
+
+async function generatePledge() {
+  const btcAddress = document.getElementById("btcAddress").value.trim();
+  const pledgeText = document.getElementById("pledgeText").value.trim();
+  const timestamp = new Date().toISOString();
+
+  if (!btcAddress || !pledgeText) {
+    alert("Please provide your BTC address and pledge text.");
+    return;
+  }
+
+  const combined = btcAddress + pledgeText + timestamp;
+  const pledgeHash = await sha256(combined);
+  const generatedAddress = "THR" + pledgeHash.substring(0, 24).toUpperCase();
+
+  const payload = {
+    btc_address: btcAddress,
+    pledge_text: pledgeText,
+    timestamp: timestamp,
+    pledge_hash: pledgeHash,
+    thr_address: generatedAddress
+  };
+
+  document.getElementById("output").innerText = JSON.stringify(payload, null, 2);
+}
+</script>
+</body>
+</html>

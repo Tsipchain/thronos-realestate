@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}🔥 Thronos Pledge to the Flame{% endblock %}
+
+{% block styles %}
+<style>
+    form { width:100%; max-width:650px; margin:20px auto; text-align:left; }
+    input,textarea{
+      width:100%; padding:8px; margin-top:5px;
+      background:#111; border:1px solid #0f0; color:#0f0;
+      font-family:monospace;
+      box-sizing: border-box;
+    }
+    label{ font-weight:bold; margin-top:15px; display:block; }
+    .info{ font-size:13px; color:#0f0; opacity:0.8; }
+
+    #result{ margin-top:25px; border:1px solid #0f0;
+      width:100%; max-width:650px; padding:15px; text-align:left; margin-left: auto; margin-right: auto; box-sizing: border-box;}
+    #result.error{ border-color:red; color:red; }
+    #result.success{ border-color:#0f0; }
+    .pdf-link{ color:#0f0; text-decoration:underline; }
+    
+    button[type="submit"] {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #0f0;
+      color: #000;
+      border: 1px solid #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover {
+      background: #0c0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="text-align: center;">
+  <h1>🔥 <span class="lang-el">Δέσμευση στη Φλόγα</span><span class="lang-en">Pledge to the Flame</span></h1>
+
+  <form id="pledgeForm">
+
+    <label><span class="lang-el">Διεύθυνση BTC (KYC):</span><span class="lang-en">BTC Address (KYC):</span></label>
+    <div class="info">
+      <span class="lang-el">Η δέσμευση γίνεται μόνο με BTC → THR. Άλλα chains χρησιμοποιούνται μόνο για bridge/balances.</span>
+      <span class="lang-en">Pledge is BTC-only → THR. Other chains are bridge/balances only.</span>
+    </div>
+    <input id="btc_address" placeholder="e.g. 1FQov4P8yz..." required>
+
+    <label><span class="lang-el">Η Δέσμευσή σας:</span><span class="lang-en">Your Pledge:</span></label>
+    <textarea id="pledge_text" rows="4">I hereby pledge allegiance to the Thronos Chain.</textarea>
+
+    <label><span class="lang-el">Μυστική Φράση (προαιρετικό):</span><span class="lang-en">Secret Passphrase (optional):</span></label>
+    <input id="user_passphrase" placeholder="Μόνο εσύ πρέπει να τη γνωρίζεις. / Only you must know this.">
+    <div class="info">
+      • <span class="lang-el">Αν προσθέσετε φράση, η αποστολή THR **απαιτεί και τα δύο**: (PDF-stego seed + αυτή τη φράση).</span><span class="lang-en">If you add a passphrase, THR sending **requires both**: (PDF-stego seed + this phrase).</span><br>
+      • <span class="lang-el">Αν χάσετε ΚΑΙ ΤΑ ΔΥΟ → καμία ανάκτηση δεν είναι δυνατή (όπως ένα πραγματικό blockchain).</span><span class="lang-en">If you lose BOTH → no recovery possible (like a real blockchain).</span>
+    </div>
+
+    <br><br>
+
+    <div style="border:1px dashed #0f0; padding:15px; text-align:center;">
+      <p><span class="lang-el">Στείλτε ελάχιστο BTC fee στο:</span><span class="lang-en">Send a minimum BTC fee to:</span></p>
+      <p><b>1QFeDPwEF8yEgPEfP79hpc8pHytXMz9oEQ</b></p>
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=bitcoin:1QFeDPwEF8yEgPEfP79hpc8pHytXMz9oEQ"
+           id="qr" title="Click to copy address" style="cursor:pointer;">
+      <p style="font-size:12px"><span class="lang-el">(Κλικ στο QR για αντιγραφή BTC διεύθυνσης)</span><span class="lang-en">(Click QR to copy BTC address)</span></p>
+    </div>
+
+    <button type="submit"><span class="lang-el">Υποβολή Δέσμευσης</span><span class="lang-en">Submit Pledge</span></button>
+  </form>
+
+  <div id="result"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function activateWallet(addr, secret) {
+  // Connect via the base.html wallet widget (walletSession from wallet_session.js)
+  if (typeof walletSession !== 'undefined' && walletSession.saveSession) {
+    walletSession.saveSession({ address: addr, sendSeed: secret || '', bound: true });
+  }
+  // Update header wallet UI if available
+  if (typeof updateHeaderWalletUi === 'function') updateHeaderWalletUi();
+  if (typeof updateWalletUI === 'function') updateWalletUI();
+  if (typeof loadWalletBalances === 'function') loadWalletBalances(true);
+  // Open the wallet popup
+  if (typeof setWalletOpen === 'function') setWalletOpen(true);
+  if (typeof showWalletContentSection === 'function') showWalletContentSection();
+}
+
+document.getElementById("qr").onclick = () => {
+  navigator.clipboard.writeText("1QFeDPwEF8yEgPEfP79hpc8pHytXMz9oEQ");
+  const lang = localStorage.getItem('lang') || 'el';
+  alert(lang === 'el' ? "Η διεύθυνση BTC αντιγράφηκε!" : "BTC address copied!");
+};
+
+document.getElementById("pledgeForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const result = document.getElementById("result");
+  const lang = localStorage.getItem('lang') || 'el';
+  
+  result.className = "";
+  result.textContent = lang === 'el' ? "⏳ Επεξεργασία..." : "⏳ Processing...";
+
+  const payload = {
+    btc_address: document.getElementById("btc_address").value.trim(),
+    pledge_text: document.getElementById("pledge_text").value.trim(),
+    user_passphrase: document.getElementById("user_passphrase").value.trim(),
+  };
+
+  try {
+    const r = await fetch("/pledge_submit", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || data.message || "Unknown error");
+
+    result.classList.add("success");
+    
+    const msg = lang === 'el' ? {
+        accepted: "🔥 Η Δέσμευση Έγινε Δεκτή!",
+        addr: "Διεύθυνση THR",
+        hash: "Pledge Hash",
+        secret: "Μυστικό Αποστολής (ΑΠΟΘΗΚΕΥΣΕ ΤΟ!)",
+        secretWarn: "Αυτό εμφανίζεται ΜΟΝΟ ΜΙΑ ΦΟΡΑ. Αποθήκευσέ το με ασφάλεια. Χρειάζεται για αποστολή THR.",
+        pdf: "Λήψη Συμβολαίου PDF",
+        pdfNote: "Το PDF περιέχει κρυπτογραφημένο αντίγραφο. Αν χάσεις το μυστικό, μπορείς να το ανακτήσεις από το",
+        recovery: "Σελίδα Ανάκτησης",
+        wallet: "Μετάβαση στο Πορτοφόλι",
+        miner: "Λήψη Thronos Kit",
+        alreadyVerified: "Αυτή η διεύθυνση BTC έχει ήδη δεσμευτεί.",
+        pending: "Αναμονή πληρωμής BTC...",
+    } : {
+        accepted: "🔥 Pledge Accepted!",
+        addr: "THR Address",
+        hash: "Pledge Hash",
+        secret: "Send Secret (SAVE THIS!)",
+        secretWarn: "This is shown ONLY ONCE. Save it securely. Required to send THR.",
+        pdf: "Download Contract PDF",
+        pdfNote: "The PDF contains an encrypted backup. If you lose your secret, recover it from the",
+        recovery: "Recovery Page",
+        wallet: "Go to Wallet",
+        miner: "Download Thronos Kit",
+        alreadyVerified: "This BTC address has already been pledged.",
+        pending: "Waiting for BTC payment...",
+    };
+
+    if (data.status === "pending") {
+      result.classList.add("error");
+      result.innerHTML = `<b>⏳ ${msg.pending}</b><br>${data.message || ''}`;
+      return;
+    }
+
+    if (data.status === "already_verified") {
+      result.innerHTML = `
+        <b>${msg.alreadyVerified}</b><br><br>
+        ${msg.addr}: <code style="font-size:14px;background:#111;padding:4px 8px;user-select:all">${data.thr_address}</code><br>
+        ${msg.hash}: <code>${data.pledge_hash}</code><br><br>
+        ${data.recovery_required ? `
+          <div style="border:2px solid #ff9500;background:rgba(255,149,0,0.1);padding:15px;margin:10px 0;text-align:center;">
+            <b style="color:#ff9500;">🔑 ${msg.secret}</b><br>
+            <small>${msg.pdfNote} <a href="${data.recovery_url || '/recovery'}" class="pdf-link">${msg.recovery}</a></small>
+          </div>
+        ` : ''}
+        ${data.pdf_url ? `📄 <a class="pdf-link" href="${data.pdf_url}" target="_blank">${msg.pdf}</a><br>` : ''}
+        ⛏️ <a class="pdf-link" href="/static/thronos_kit.zip" download>${msg.miner}</a> <small style="color:#888;">(password: <code>thronos2026</code>)</small><br>
+        💼 <a class="pdf-link" href="/">${msg.wallet}</a>
+      `;
+      // Auto-connect wallet for already_verified
+      activateWallet(data.thr_address);
+      return;
+    }
+
+    result.innerHTML = `
+      <b>${msg.accepted}</b><br><br>
+      ${msg.addr}: <code style="font-size:14px;background:#111;padding:4px 8px;user-select:all">${data.thr_address}</code><br>
+      ${msg.hash}: <code>${data.pledge_hash}</code><br><br>
+      ${data.send_secret ? `
+        <div style="border:2px solid #ff0;background:rgba(255,255,0,0.1);padding:15px;margin:10px 0;text-align:center;">
+          <b style="color:#ff0;">⚠️ ${msg.secret}</b><br>
+          <code id="secretCode" style="font-size:18px;color:#ff0;background:#111;padding:8px 16px;display:inline-block;margin:10px 0;user-select:all;letter-spacing:1px">${data.send_secret}</code><br>
+          <div style="margin:10px 0;display:flex;gap:10px;justify-content:center;">
+            <button onclick="navigator.clipboard.writeText('${data.send_secret}');this.textContent='✅ Copied!';setTimeout(()=>this.textContent='📋 Copy',2000)" style="padding:8px 16px;background:#ff0;color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">📋 Copy</button>
+            <button onclick="(function(){var b=new Blob(['Send Secret for ${data.thr_address}\\n\\n${data.send_secret}\\n\\nKeep this safe. Required to send THR.'],{type:'text/plain'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='thr_send_secret_${data.thr_address}.txt';a.click()})()" style="padding:8px 16px;background:#0f0;color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">💾 Download .txt</button>
+          </div>
+          <small style="color:#f88;">${msg.secretWarn}</small><br>
+          <small>${msg.pdfNote} <a href="/recovery" class="pdf-link">${msg.recovery}</a></small>
+        </div>
+      ` : ''}
+      ${data.pdf_url ? `📄 <a class="pdf-link" href="${data.pdf_url}" target="_blank">${msg.pdf}</a><br>` : ''}
+      ⛏️ <a class="pdf-link" href="/static/thronos_kit.zip" download>${msg.miner}</a> <small style="color:#888;">(password: <code>thronos2026</code>)</small><br>
+      💼 <a class="pdf-link" href="/">${msg.wallet}</a>
+    `;
+    // Auto-connect wallet with new credentials
+    if (data.send_secret) activateWallet(data.thr_address, data.send_secret);
+  } catch (err) {
+    result.classList.add("error");
+    const errMsg = lang === 'el' ? "❌ Σφάλμα:" : "❌ Error:";
+    result.innerHTML = `<b>${errMsg}</b> ${err.message}`;
+  }
+};
+</script>
+{% endblock %}

@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thronos Wallet Widget</title>
+    <script>
+        window.TH_NODE1_RPC_URL = "{{ node1_rpc_url }}";
+        window.TH_NODE2_RPC_URL = "{{ node2_rpc_url }}";
+    </script>
+    <script src="{{ url_for('static', filename='fetch_utils.js') }}?v={{ build_id }}"></script>
+    <style>
+        :root {
+            --widget-bg: #050b0b;
+            --widget-panel: #071810;
+            --widget-fg: #e6ffe5;
+            --widget-accent: #00ff66;
+            --widget-border: #1a3b2e;
+            --widget-muted: #56ff9a;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: var(--widget-bg);
+            font-family: system-ui, -apple-system, sans-serif;
+            color: var(--widget-fg);
+        }
+
+        /* Language toggle */
+        .lang-en, .lang-ja, .lang-ru, .lang-es { display: none; }
+        body.lang-en .lang-el { display: none; }
+        body.lang-en .lang-en { display: inline; }
+        body.lang-ja .lang-el { display: none; }
+        body.lang-ja .lang-ja { display: inline; }
+        body.lang-ru .lang-el { display: none; }
+        body.lang-ru .lang-ru { display: inline; }
+        body.lang-es .lang-el { display: none; }
+        body.lang-es .lang-es { display: inline; }
+
+        .lang-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 255, 102, 0.1);
+            border: 1px solid var(--widget-border);
+            color: var(--widget-accent);
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 11px;
+            z-index: 100;
+        }
+
+        .lang-toggle:hover {
+            background: rgba(0, 255, 102, 0.2);
+        }
+
+        .wallet-widget {
+            max-width: 500px;
+            margin: 0 auto;
+            background: var(--widget-panel);
+            border: 1px solid var(--widget-border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 102, 0.1);
+            position: relative;
+        }
+
+        /* Wallet Action Buttons */
+        .wallet-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .wallet-btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(0, 255, 102, 0.1);
+            border: 1px solid var(--widget-border);
+            color: var(--widget-accent);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .wallet-btn:hover {
+            background: rgba(0, 255, 102, 0.2);
+            border-color: var(--widget-accent);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 5000;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--widget-panel);
+            border: 2px solid var(--widget-accent);
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--widget-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        .modal-close:hover {
+            color: var(--widget-accent);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--widget-accent);
+            margin-bottom: 20px;
+            padding-right: 30px;
+        }
+
+        /* Transaction History Styles */
+        .tx-item {
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--widget-border);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .tx-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .tx-amount {
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        .tx-amount.incoming {
+            color: var(--widget-accent);
+        }
+
+        .tx-amount.outgoing {
+            color: #ffd700;
+        }
+
+        .tx-details {
+            font-size: 11px;
+            color: var(--widget-muted);
+            word-break: break-all;
+        }
+
+        .tx-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .tx-status.confirmed {
+            background: rgba(0, 255, 102, 0.2);
+            color: var(--widget-accent);
+        }
+
+        .tx-status.pending {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+        }
+
+        /* Send Form Styles */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            color: var(--widget-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--widget-border);
+            color: var(--widget-fg);
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--widget-accent);
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+        }
+
+        .form-submit {
+            width: 100%;
+            padding: 12px;
+            background: var(--widget-accent);
+            color: var(--widget-bg);
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .form-submit:hover {
+            background: var(--widget-muted);
+            transform: translateY(-1px);
+        }
+
+        .form-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Bridge Tab Styles */
+        .wallet-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--widget-border);
+        }
+
+        .wallet-tab {
+            padding: 10px 15px;
+            background: transparent;
+            border: none;
+            color: var(--widget-muted);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .wallet-tab.active {
+            color: var(--widget-accent);
+            border-bottom-color: var(--widget-accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .deposit-address {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--widget-border);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: rgba(0, 255, 102, 0.1);
+            border: 1px solid var(--widget-accent);
+            color: var(--widget-accent);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .copy-btn:hover {
+            background: rgba(0, 255, 102, 0.2);
+        }
+
+        .widget-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--widget-border);
+        }
+
+        .widget-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--widget-accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wallet-address {
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--widget-muted);
+            padding: 4px 8px;
+            background: rgba(0, 255, 102, 0.05);
+            border-radius: 6px;
+            border: 1px solid rgba(0, 255, 102, 0.1);
+        }
+
+        .tokens-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .token-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(0, 255, 102, 0.03);
+            border: 1px solid var(--widget-border);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .token-item:hover {
+            background: rgba(0, 255, 102, 0.08);
+            border-color: var(--widget-accent);
+            transform: translateY(-1px);
+        }
+
+        .token-item:active {
+            transform: scale(0.98);
+        }
+
+        .token-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--widget-bg);
+            border: 2px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .token-logo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .token-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .token-symbol {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--widget-fg);
+        }
+
+        .token-name {
+            font-size: 12px;
+            color: var(--widget-muted);
+            opacity: 0.8;
+        }
+
+        .token-balance {
+            text-align: right;
+        }
+
+        .balance-amount {
+            font-size: 16px;
+            font-weight: 600;
+            font-family: monospace;
+            color: var(--widget-fg);
+        }
+
+        .balance-usd {
+            font-size: 11px;
+            color: var(--widget-muted);
+            opacity: 0.6;
+        }
+
+        .widget-footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--widget-border);
+            text-align: center;
+        }
+
+        .last-updated {
+            font-size: 10px;
+            color: var(--widget-muted);
+            opacity: 0.5;
+        }
+
+        .refresh-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: var(--widget-accent);
+            color: var(--widget-bg);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .refresh-btn:hover {
+            background: var(--widget-muted);
+            transform: scale(1.05);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--widget-muted);
+        }
+
+        .error {
+            text-align: center;
+            padding: 20px;
+            color: #ff4d4d;
+            background: rgba(255, 77, 77, 0.1);
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .spinner {
+            border: 3px solid rgba(0, 255, 102, 0.1);
+            border-top: 3px solid var(--widget-accent);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .total-value {
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 255, 102, 0.05);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .total-label {
+            font-size: 12px;
+            color: var(--widget-muted);
+            margin-bottom: 5px;
+        }
+
+        .total-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--widget-accent);
+        }
+
+        /* Compact mode for embedding */
+        .wallet-widget.compact {
+            padding: 12px;
+            max-width: 300px;
+        }
+
+        .wallet-widget.compact .token-item {
+            padding: 8px;
+            gap: 8px;
+        }
+
+        .wallet-widget.compact .token-logo {
+            width: 32px;
+            height: 32px;
+        }
+
+        .wallet-widget.compact .token-symbol {
+            font-size: 14px;
+        }
+
+        .wallet-widget.compact .balance-amount {
+            font-size: 14px;
+        }
+
+        /* Token Selector */
+        .token-selector {
+            margin-bottom: 15px;
+        }
+
+        .token-selector-label {
+            font-size: 11px;
+            color: var(--widget-muted);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .token-selector-dropdown {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--widget-border);
+            color: var(--widget-fg);
+            font-family: monospace;
+            font-size: 13px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .token-selector-dropdown:hover,
+        .token-selector-dropdown:focus {
+            border-color: var(--widget-accent);
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+            outline: none;
+        }
+
+        /* Token Info Modal */
+        .token-info-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .token-info-modal.active {
+            display: flex;
+        }
+
+        .token-info-content {
+            background: var(--widget-panel);
+            border: 2px solid var(--widget-accent);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 40px rgba(0, 255, 102, 0.3);
+            position: relative;
+        }
+
+        .token-info-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: var(--widget-muted);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .token-info-close:hover {
+            color: var(--widget-accent);
+        }
+
+        .token-info-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--widget-border);
+        }
+
+        .token-info-logo-large {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .token-info-logo-large img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .token-info-title {
+            flex: 1;
+        }
+
+        .token-info-symbol {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--widget-accent);
+        }
+
+        .token-info-name {
+            font-size: 13px;
+            color: var(--widget-muted);
+        }
+
+        .token-info-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .token-info-stat {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 102, 0.1);
+        }
+
+        .token-info-stat-label {
+            font-size: 11px;
+            color: var(--widget-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .token-info-stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--widget-fg);
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <button class="lang-toggle" onclick="toggleLanguage()">🌐 GR</button>
+
+    <div class="wallet-widget" id="walletWidget">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px;">
+                <span class="lang-el">Φόρτωση πορτοφολιού...</span>
+                <span class="lang-en">Loading wallet...</span>
+                <span class="lang-ja">ウォレットを読み込み中...</span>
+                <span class="lang-ru">Загрузка кошелька...</span>
+                <span class="lang-es">Cargando billetera...</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Token Info Modal -->
+    <div class="token-info-modal" id="tokenInfoModal">
+        <div class="token-info-content">
+            <button class="token-info-close" onclick="closeTokenInfo()">×</button>
+            <div class="token-info-header">
+                <div class="token-info-logo-large" id="modalTokenLogo"></div>
+                <div class="token-info-title">
+                    <div class="token-info-symbol" id="modalTokenSymbol"></div>
+                    <div class="token-info-name" id="modalTokenName"></div>
+                </div>
+            </div>
+            <div class="token-info-stats">
+                <div class="token-info-stat">
+                    <div class="token-info-stat-label">
+                        <span class="lang-el">Υπόλοιπο</span>
+                        <span class="lang-en">Your Balance</span>
+                        <span class="lang-ja">残高</span>
+                        <span class="lang-ru">Ваш баланс</span>
+                        <span class="lang-es">Tu Saldo</span>
+                    </div>
+                    <div class="token-info-stat-value" id="modalTokenBalance"></div>
+                </div>
+                <div class="token-info-stat">
+                    <div class="token-info-stat-label">Decimals</div>
+                    <div class="token-info-stat-value" id="modalTokenDecimals"></div>
+                </div>
+                <div class="token-info-stat">
+                    <div class="token-info-stat-label">
+                        <span class="lang-el">Αξία σε THR</span>
+                        <span class="lang-en">Value in THR</span>
+                        <span class="lang-ja">THRでの価値</span>
+                        <span class="lang-ru">Стоимость в THR</span>
+                        <span class="lang-es">Valor en THR</span>
+                    </div>
+                    <div class="token-info-stat-value" id="modalTokenValueTHR"></div>
+                </div>
+                <div class="token-info-stat">
+                    <div class="token-info-stat-label">
+                        <span class="lang-el">Τιμή (THR)</span>
+                        <span class="lang-en">Rate (THR)</span>
+                        <span class="lang-ja">レート (THR)</span>
+                        <span class="lang-ru">Курс (THR)</span>
+                        <span class="lang-es">Tasa (THR)</span>
+                    </div>
+                    <div class="token-info-stat-value" id="modalTokenRateTHR"></div>
+                </div>
+                <div class="token-info-stat">
+                    <div class="token-info-stat-label">
+                        <span class="lang-el">Χρώμα Token</span>
+                        <span class="lang-en">Token Color</span>
+                        <span class="lang-ja">トークンカラー</span>
+                        <span class="lang-ru">Цвет токена</span>
+                        <span class="lang-es">Color del Token</span>
+                    </div>
+                    <div class="token-info-stat-value" id="modalTokenColor">
+                        <span id="modalTokenColorBox" style="display: inline-block; width: 20px; height: 20px; border-radius: 4px; vertical-align: middle; margin-left: 5px;"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeHistoryModal()">×</button>
+            <div class="modal-title"><span class="lang-el">Ιστορικό Συναλλαγών</span><span class="lang-en">Transaction History</span></div>
+            <div id="historyContent">
+                <p style="color: var(--widget-muted);">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Send Modal -->
+    <div class="modal-overlay" id="sendModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeSendModal()">×</button>
+            <div class="modal-title"><span class="lang-el">Αποστολή Tokens</span><span class="lang-en">Send Tokens</span></div>
+            <form id="sendForm" onsubmit="handleSend(event)">
+                <div class="form-group">
+                    <label class="form-label"><span class="lang-el">Προς Διεύθυνση</span><span class="lang-en">To Address</span></label>
+                    <input type="text" class="form-input" id="sendToAddress" placeholder="THR..." required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><span class="lang-el">Ποσό</span><span class="lang-en">Amount</span></label>
+                    <input type="number" class="form-input" id="sendAmount" placeholder="0.0" step="0.000001" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><span class="lang-el">Token</span><span class="lang-en">Token</span></label>
+                    <select class="form-input" id="sendToken">
+                        <option value="THR">THR</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><span class="lang-el">Μυστικό Αποστολής</span><span class="lang-en">Send Secret</span></label>
+                    <input type="password" class="form-input" id="sendSecret" placeholder="auth_secret" required>
+                </div>
+                <div id="sendStatus" style="margin: 15px 0; min-height: 20px; color: var(--widget-muted); font-size: 12px;"></div>
+                <button type="submit" class="form-submit" id="sendSubmitBtn">
+                    <span class="lang-el">Αποστολή</span><span class="lang-en">Send</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bridge Modal -->
+    <div class="modal-overlay" id="bridgeModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeBridgeModal()">×</button>
+            <div class="modal-title"><span class="lang-el">Bridge - Κατάθεση BTC</span><span class="lang-en">Bridge - BTC Deposit</span></div>
+            <div class="wallet-tabs">
+                <button class="wallet-tab active" onclick="switchBridgeTab('deposit')">
+                    <span class="lang-el">Κατάθεση</span><span class="lang-en">Deposit</span>
+                </button>
+                <button class="wallet-tab" onclick="switchBridgeTab('withdraw')">
+                    <span class="lang-el">Ανάληψη</span><span class="lang-en">Withdraw</span>
+                </button>
+            </div>
+            <div id="depositTab" class="tab-content active">
+                <p style="color: var(--widget-muted); font-size: 12px; margin-bottom: 15px;">
+                    <span class="lang-el">Στείλτε BTC στη διεύθυνση κατάθεσης για να λάβετε wBTC</span>
+                    <span class="lang-en">Send BTC to the deposit address to receive wBTC</span>
+                </p>
+                <div id="depositAddressContainer">
+                    <p style="color: var(--widget-muted);">Loading deposit address...</p>
+                </div>
+            </div>
+            <div id="withdrawTab" class="tab-content">
+                <p style="color: var(--widget-muted); font-size: 12px;">
+                    <span class="lang-el">Η λειτουργία ανάληψης είναι διαθέσιμη στο πλήρες Bridge interface</span>
+                    <span class="lang-en">Withdrawal function is available in the full Bridge interface</span>
+                </p>
+                <a href="/bridge" class="form-submit" style="display: block; text-align: center; text-decoration: none; margin-top: 15px;">
+                    <span class="lang-el">Άνοιγμα Bridge</span><span class="lang-en">Open Bridge</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Music/Telemetry Modal -->
+    <div class="modal-overlay" id="musicTelemetryModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeMusicTelemetryModal()">×</button>
+            <div class="modal-title">🎵 <span class="lang-el">Μουσική & Τηλεμετρία</span><span class="lang-en">Music & Telemetry</span></div>
+
+            <!-- Tabs -->
+            <div class="wallet-tabs">
+                <button class="wallet-tab active" onclick="switchMusicTab('player')">
+                    <span class="lang-el">🎵 Player</span><span class="lang-en">🎵 Player</span>
+                </button>
+                <button class="wallet-tab" onclick="switchMusicTab('whisper')">
+                    <span class="lang-el">📡 WhisperNote</span><span class="lang-en">📡 WhisperNote</span>
+                </button>
+                <button class="wallet-tab" onclick="switchMusicTab('telemetry')">
+                    <span class="lang-el">🛰️ Telemetry</span><span class="lang-en">🛰️ Telemetry</span>
+                </button>
+            </div>
+
+            <!-- Music Player Tab -->
+            <div id="playerTab" class="tab-content active">
+                <p style="color: var(--widget-muted); font-size: 12px; margin-bottom: 15px;">
+                    <span class="lang-el">Αναπαραγωγή μουσικής και αποστολή tips σε καλλιτέχνες</span>
+                    <span class="lang-en">Play music and send tips to artists</span>
+                </p>
+                <div id="musicPlayerContent">
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🎵</div>
+                        <p style="color: var(--widget-muted);">
+                            <span class="lang-el">Δεν παίζει τίποτα αυτή τη στιγμή</span>
+                            <span class="lang-en">Nothing playing right now</span>
+                        </p>
+                        <a href="/music" class="form-submit" style="display: inline-block; text-decoration: none; margin-top: 15px; padding: 10px 20px;">
+                            <span class="lang-el">🎧 Περιήγηση Μουσικής</span><span class="lang-en">🎧 Browse Music</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WhisperNote Tab -->
+            <div id="whisperTab" class="tab-content">
+                <p style="color: var(--widget-muted); font-size: 12px; margin-bottom: 15px;">
+                    <span class="lang-el">Μετατροπή δεδομένων συναλλαγών σε ηχητικά σήματα</span>
+                    <span class="lang-en">Convert transaction data to audio signals</span>
+                </p>
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="lang-el">Δεδομένα Συναλλαγής (JSON)</span>
+                        <span class="lang-en">Transaction Data (JSON)</span>
+                    </label>
+                    <textarea class="form-input" id="whisperData" rows="4" placeholder='{"tx_id": "...", "amount": 100}'></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="lang-el">Συχνότητα Ήχου</span>
+                        <span class="lang-en">Audio Frequency</span>
+                    </label>
+                    <select class="form-input" id="whisperFreq">
+                        <option value="1000">1kHz (Low)</option>
+                        <option value="2000" selected>2kHz (Mid)</option>
+                        <option value="4000">4kHz (High)</option>
+                    </select>
+                </div>
+                <button class="form-submit" onclick="generateWhisperNote()">
+                    <span class="lang-el">🎵 Δημιουργία Ήχου</span>
+                    <span class="lang-en">🎵 Generate Audio</span>
+                </button>
+                <div id="whisperPlayer" style="display:none; margin-top: 15px;">
+                    <audio id="whisperAudio" controls style="width: 100%; margin-bottom: 10px;"></audio>
+                    <button class="wallet-btn" onclick="downloadWhisper()" style="width: 100%;">
+                        <span class="lang-el">💾 Κατέβασμα WAV</span>
+                        <span class="lang-en">💾 Download WAV</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Telemetry Tab -->
+            <div id="telemetryTab" class="tab-content">
+                <p style="color: var(--widget-muted); font-size: 12px; margin-bottom: 15px;">
+                    <span class="lang-el">GPS και τηλεμετρία οχήματος σε πραγματικό χρόνο</span>
+                    <span class="lang-en">Real-time GPS and vehicle telemetry</span>
+                </p>
+                <div id="telemetryData" style="background: rgba(0,255,102,0.05); border: 1px solid rgba(0,255,102,0.2); border-radius: 8px; padding: 15px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;">
+                        <div>
+                            <div style="color: var(--widget-muted);">
+                                <span class="lang-el">📍 Γεωγραφικό Πλάτος</span>
+                                <span class="lang-en">📍 Latitude</span>
+                            </div>
+                            <div style="color: var(--widget-accent); font-weight: bold;" id="telemetryLat">--</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--widget-muted);">
+                                <span class="lang-el">📍 Γεωγραφικό Μήκος</span>
+                                <span class="lang-en">📍 Longitude</span>
+                            </div>
+                            <div style="color: var(--widget-accent); font-weight: bold;" id="telemetryLng">--</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--widget-muted);">
+                                <span class="lang-el">🚗 Ταχύτητα</span>
+                                <span class="lang-en">🚗 Speed</span>
+                            </div>
+                            <div style="color: var(--widget-accent); font-weight: bold;" id="telemetrySpeed">-- km/h</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--widget-muted);">
+                                <span class="lang-el">🧭 Κατεύθυνση</span>
+                                <span class="lang-en">🧭 Heading</span>
+                            </div>
+                            <div style="color: var(--widget-accent); font-weight: bold;" id="telemetryHeading">--°</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="form-submit" onclick="requestTelemetry()" style="margin-top: 15px;">
+                    <span class="lang-el">🛰️ Ενεργοποίηση GPS</span>
+                    <span class="lang-en">🛰️ Enable GPS</span>
+                </button>
+                <p style="color: var(--widget-muted); font-size: 10px; margin-top: 10px; text-align: center;">
+                    <span class="lang-el">Πλήρης λειτουργικότητα διαθέσιμη στο IoT Dashboard</span>
+                    <span class="lang-en">Full functionality available in IoT Dashboard</span>
+                </p>
+                <a href="/iot" class="wallet-btn" style="display: block; text-align: center; text-decoration: none; margin-top: 10px;">
+                    <span class="lang-el">🚗 Άνοιγμα IoT</span><span class="lang-en">🚗 Open IoT</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Translations
+        const TRANSLATIONS = {
+            el: {
+                walletBalance: "💎 Υπόλοιπο Πορτοφολιού",
+                totalPortfolio: "Συνολικό Χαρτοφυλάκιο",
+                filterByToken: "Φίλτρο ανά Token",
+                allTokens: "Όλα τα Tokens",
+                lastUpdated: "Τελευταία ενημέρωση",
+                refresh: "🔄 Ανανέωση",
+                errorLoading: "Σφάλμα φόρτωσης πορτοφολιού",
+                retry: "Δοκιμάστε ξανά",
+                history: "Ιστορικό",
+                send: "Αποστολή",
+                bridge: "Bridge",
+                transactionHistory: "Ιστορικό Συναλλαγών",
+                sendTokens: "Αποστολή Tokens",
+                bridgeDeposit: "Bridge Κατάθεση"
+            },
+            en: {
+                walletBalance: "💎 Wallet Balance",
+                totalPortfolio: "Total Portfolio",
+                filterByToken: "Filter by Token",
+                allTokens: "All Tokens",
+                lastUpdated: "Last updated",
+                refresh: "🔄 Refresh",
+                errorLoading: "Error loading wallet",
+                retry: "Retry",
+                history: "History",
+                send: "Send",
+                bridge: "Bridge",
+                transactionHistory: "Transaction History",
+                sendTokens: "Send Tokens",
+                bridgeDeposit: "Bridge Deposit"
+            },
+            ja: {
+                walletBalance: "💎 ウォレット残高",
+                totalPortfolio: "総ポートフォリオ",
+                filterByToken: "トークンでフィルタ",
+                allTokens: "すべてのトークン",
+                lastUpdated: "最終更新",
+                refresh: "🔄 更新",
+                errorLoading: "ウォレット読み込みエラー",
+                retry: "再試行"
+            },
+            ru: {
+                walletBalance: "💎 Баланс кошелька",
+                totalPortfolio: "Общий портфель",
+                filterByToken: "Фильтр по токену",
+                allTokens: "Все токены",
+                lastUpdated: "Последнее обновление",
+                refresh: "🔄 Обновить",
+                errorLoading: "Ошибка загрузки кошелька",
+                retry: "Повторить"
+            },
+            es: {
+                walletBalance: "💎 Saldo de Billetera",
+                totalPortfolio: "Portafolio Total",
+                filterByToken: "Filtrar por Token",
+                allTokens: "Todos los Tokens",
+                lastUpdated: "Última actualización",
+                refresh: "🔄 Actualizar",
+                errorLoading: "Error al cargar billetera",
+                retry: "Reintentar"
+            }
+        };
+
+        window.LANG_SEQUENCE = window.LANG_SEQUENCE || ['gr', 'en', 'ja', 'es', 'ru'];
+        const LANG_CLASS_MAP = { 'gr': 'lang-el', 'en': 'lang-en', 'ja': 'lang-ja', 'es': 'lang-es', 'ru': 'lang-ru' };
+
+        function getLang() {
+            const lang = localStorage.getItem("lang") || "gr";
+            return lang === "gr" ? "el" : lang;
+        }
+
+        function t(key) {
+            const lang = getLang();
+            return TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
+        }
+
+        function toggleLanguage() {
+            const current = localStorage.getItem("lang") || "gr";
+            const idx = window.LANG_SEQUENCE.indexOf(current);
+            const next = window.LANG_SEQUENCE[(idx + 1) % window.LANG_SEQUENCE.length];
+            localStorage.setItem("lang", next);
+            applyLanguage();
+        }
+
+        function applyLanguage() {
+            const lang = localStorage.getItem("lang") || "gr";
+            document.body.className = LANG_CLASS_MAP[lang] || '';
+            document.querySelector('.lang-toggle').textContent = '🌐 ' + lang.toUpperCase();
+            // Re-render if data loaded
+            if (allTokens.length > 0) {
+                renderWallet({ address: walletAddress, tokens: allTokens, last_updated: lastUpdated });
+            }
+        }
+
+        // Configuration - can be set via URL parameters or embedded config
+        const urlParams = new URLSearchParams(window.location.search);
+        let walletAddress = urlParams.get('address') || localStorage.getItem('thr_address') || 'THR79ca94a7eb70a6aa99d12d7fdb01446ef246301a';
+        const compactMode = urlParams.get('compact') === 'true';
+        const showZero = urlParams.get('show_zero') !== 'false';
+        const autoRefresh = parseInt(urlParams.get('refresh') || '0');
+        let autoRefreshInterval = null;
+
+        // Apply compact mode if specified
+        if (compactMode) {
+            document.getElementById('walletWidget').classList.add('compact');
+        }
+
+        // Store all tokens globally for filtering
+        let allTokens = [];
+        let selectedTokenFilter = 'all';
+        let lastUpdated = '';
+
+        async function loadWalletData() {
+            const widget = document.getElementById('walletWidget');
+
+            try {
+                // Add 15-second timeout to prevent infinite loading
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+                const response = await fetch(`/api/balances?address=${encodeURIComponent(walletAddress)}&show_zero=${showZero}`, {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) throw new Error('Failed to load wallet data');
+
+                const data = await response.json();
+                renderWallet(data);
+            } catch (error) {
+                const errorMsg = error.name === 'AbortError'
+                    ? 'Request timed out. Server may be overloaded. Please try again.'
+                    : error.message;
+                widget.innerHTML = `
+                    <div class="error">
+                        <strong>${t('errorLoading')}</strong>
+                        <p>${errorMsg}</p>
+                        <button class="refresh-btn" onclick="loadWalletData()">${t('retry')}</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderWallet(data) {
+            const widget = document.getElementById('walletWidget');
+            allTokens = data.tokens || [];
+            lastUpdated = data.last_updated || '';
+
+            // Filter out invalid/generic tokens
+            const validTokensForDropdown = allTokens.filter(token => {
+                const sym = token.symbol.toUpperCase();
+                return sym !== 'TOKEN' && sym !== 'UNKNOWN_TOKEN' && sym !== 'UNKNOWN';
+            });
+
+            // Calculate total balance using dynamic prices from pools
+            const pricedTokens = allTokens.filter(t => t.value_in_thr !== null && t.value_in_thr !== undefined);
+            const totalTHR = pricedTokens.reduce((sum, t) => sum + Number(t.value_in_thr || 0), 0);
+            const totalTHRDisplay = pricedTokens.length ? `${totalTHR.toFixed(2)} THR` : '—';
+
+            let html = `
+                <div class="widget-header">
+                    <div class="widget-title">${t('walletBalance')}</div>
+                </div>
+
+                <div class="wallet-address">${data.address.slice(0, 12)}...${data.address.slice(-8)}</div>
+
+                ${!compactMode ? `
+                <div class="total-value">
+                    <div class="total-label">${t('totalPortfolio')}</div>
+                    <div class="total-amount">${totalTHRDisplay}</div>
+                </div>
+                ` : ''}
+
+                ${!compactMode ? `
+                <div class="token-selector">
+                    <label class="token-selector-label">${t('filterByToken')}</label>
+                    <select class="token-selector-dropdown" id="tokenFilter" onchange="filterTokens()">
+                        <option value="all">${t('allTokens')}</option>
+                        ${validTokensForDropdown.map(t => `<option value="${t.symbol}">${t.symbol} - ${t.name}</option>`).join('')}
+                    </select>
+                </div>
+                ` : ''}
+
+                <div class="tokens-list" id="tokensList"></div>
+
+                <div class="widget-footer">
+                    <div class="last-updated">${t('lastUpdated')}: ${data.last_updated}</div>
+                    <button class="refresh-btn" onclick="loadWalletData()">${t('refresh')}</button>
+                </div>
+
+                <div class="wallet-actions">
+                    <button class="wallet-btn" onclick="openHistoryModal()">📜 ${t('history')}</button>
+                    <button class="wallet-btn" onclick="openSendModal()">📤 ${t('send')}</button>
+                    <button class="wallet-btn" onclick="openBridgeModal()">🌉 ${t('bridge')}</button>
+                </div>
+            `;
+
+            widget.innerHTML = html;
+
+            // Render tokens after setting up the container
+            renderTokensList();
+        }
+
+        function renderTokensList() {
+            const container = document.getElementById('tokensList');
+            if (!container) return;
+
+            // Filter out invalid/generic tokens
+            const validTokens = allTokens.filter(token => {
+                const sym = token.symbol.toUpperCase();
+                return sym !== 'TOKEN' && sym !== 'UNKNOWN_TOKEN' && sym !== 'UNKNOWN';
+            });
+
+            const tokensToShow = selectedTokenFilter === 'all'
+                ? validTokens
+                : validTokens.filter(t => t.symbol === selectedTokenFilter);
+
+            container.innerHTML = '';
+
+            tokensToShow.forEach(token => {
+                // N5 FIX: Use logo_url from API response (includes /static prefix from resolve_token_logo)
+                const logoUrl = token.logo_url || '';
+                const valueInThr = token.value_in_thr != null ? Number(token.value_in_thr) : null;
+                const priceInThr = token.price_in_thr != null ? Number(token.price_in_thr) : null;
+                const valueDisplay = valueInThr != null ? `≈ ${valueInThr.toFixed(4)} THR` : '—';
+                const rateDisplay = priceInThr != null ? `Rate: ${priceInThr.toFixed(6)} THR` : 'Rate: —';
+                const tokenDiv = document.createElement('div');
+                tokenDiv.className = 'token-item';
+                tokenDiv.onclick = () => showTokenInfo(token);
+                tokenDiv.innerHTML = `
+                    <div class="token-logo" style="border-color: ${token.color};">
+                        ${logoUrl ? `<img src="${logoUrl}" alt="${token.symbol}" onerror="this.style.display='none'; this.nextSibling.style.display='block'; this.onerror=null; this.src='/static/img/logo.png';">` : ''}
+                        <span style="display: ${logoUrl ? 'none' : 'block'}; color: ${token.color};">${token.symbol[0]}</span>
+                    </div>
+                    <div class="token-info">
+                        <div class="token-symbol">${token.symbol}</div>
+                        <div class="token-name">${token.name}</div>
+                    </div>
+                    <div class="token-balance">
+                        <div class="balance-amount" style="color: ${token.color};">
+                            ${token.balance.toFixed(token.decimals)}
+                        </div>
+                        ${!compactMode ? `<div class="balance-usd">${valueDisplay}</div><div class="balance-usd">${rateDisplay}</div>` : ''}
+                    </div>
+                `;
+                container.appendChild(tokenDiv);
+            });
+        }
+
+        function filterTokens() {
+            const select = document.getElementById('tokenFilter');
+            selectedTokenFilter = select.value;
+            renderTokensList();
+        }
+
+        function showTokenInfo(token) {
+            const modal = document.getElementById('tokenInfoModal');
+            const logoDiv = document.getElementById('modalTokenLogo');
+            // N5 FIX: Use logo_url from API response
+            const logoUrl = token.logo_url || '';
+
+            // Set logo
+            logoDiv.style.borderColor = token.color;
+            if (logoUrl) {
+                logoDiv.innerHTML = `<img src="${logoUrl}" alt="${token.symbol}" onerror="this.src='/static/img/logo.png';">`;
+            } else {
+                logoDiv.innerHTML = `<span style="color: ${token.color};">${token.symbol[0]}</span>`;
+            }
+
+            // Set details
+            document.getElementById('modalTokenSymbol').textContent = token.symbol;
+            document.getElementById('modalTokenName').textContent = token.name;
+            document.getElementById('modalTokenBalance').textContent = token.balance.toFixed(token.decimals);
+            document.getElementById('modalTokenDecimals').textContent = token.decimals;
+            document.getElementById('modalTokenValueTHR').textContent = token.value_in_thr != null
+                ? `${Number(token.value_in_thr).toFixed(6)} THR`
+                : '—';
+            document.getElementById('modalTokenRateTHR').textContent = token.price_in_thr != null
+                ? `${Number(token.price_in_thr).toFixed(6)} THR`
+                : '—';
+            document.getElementById('modalTokenColorBox').style.backgroundColor = token.color;
+
+            modal.classList.add('active');
+        }
+
+        function closeTokenInfo() {
+            const modal = document.getElementById('tokenInfoModal');
+            modal.classList.remove('active');
+        }
+
+        // Close modal on background click
+        document.addEventListener('click', (e) => {
+            const modal = document.getElementById('tokenInfoModal');
+            if (e.target === modal) {
+                closeTokenInfo();
+            }
+        });
+
+        // Initial load
+        applyLanguage();
+        loadWalletData();
+
+        // Auto-refresh if enabled
+        if (autoRefresh > 0) {
+            autoRefreshInterval = setInterval(loadWalletData, autoRefresh * 1000);
+        }
+
+        // Export for embedding
+        window.ThronosWalletWidget = {
+            load: loadWalletData,
+            setAddress: (addr) => {
+                walletAddress = addr;
+                loadWalletData();
+            },
+            setLanguage: (lang) => {
+                localStorage.setItem("lang", lang);
+                applyLanguage();
+            }
+        };
+
+        // ========== QUEST: Wallet Widget Modals ==========
+
+        // History Modal
+        const historyState = {
+            filter: 'all',
+            selectedToken: '',
+            tokenScope: 'all',
+            walletTxs: [],
+            aiLedger: [],
+            creditsBalance: null,
+        };
+
+        // Memory optimization: limit transaction history to prevent unbounded growth
+        const MAX_HISTORY = 200;
+
+        function trimHistory(transactions) {
+            if (transactions.length > MAX_HISTORY) {
+                return transactions.slice(-MAX_HISTORY);
+            }
+            return transactions;
+        }
+
+        function normalizeKind(tx) {
+            return String(tx.kind || '').toLowerCase();
+        }
+
+        function normalizeCategory(tx) {
+            return String(tx.category || '').toLowerCase();
+        }
+
+        function getCanonicalCategory(tx) {
+            const category = normalizeCategory(tx);
+            if (category) {
+                return category;
+            }
+            const kind = normalizeKind(tx);
+            const map = {
+                transfer: 'thr',
+                thr_transfer: 'thr',
+                mining: 'mining',
+                block_reward: 'mining',
+                mining_reward: 'mining',
+                mined: 'mining',
+                token_transfer: 'tokens',
+                swap: 'swaps',
+                pool_swap: 'swaps',
+                liquidity_add: 'liquidity',
+                liquidity_remove: 'liquidity',
+                liquidity: 'liquidity',
+                pool_add: 'liquidity',
+                pool_remove: 'liquidity',
+                bridge: 'bridge',
+                bridge_deposit: 'bridge',
+                bridge_withdraw: 'bridge',
+                l2e: 'l2e',
+                l2e_reward: 'l2e',
+                ai_credit: 'ai_credits',
+                ai_credits: 'ai_credits',
+                ai_credits_earned: 'ai_credits',
+                ai_credits_spent: 'ai_credits',
+                architect: 'architect_job',
+                architect_job: 'architect_job',
+                ai_job_created: 'architect_job',
+                ai_job_progress: 'architect_job',
+                ai_job_completed: 'architect_job',
+                ai_job_reward: 'architect_job',
+                iot: 'iot',
+                iot_parking: 'iot',
+                iot_parking_reservation: 'iot',
+                iot_autopilot: 'iot',
+                gateway: 'gateway',
+                gateway_deposit: 'gateway',
+                gateway_withdraw: 'gateway',
+                fiat_buy: 'gateway',
+                fiat_deposit: 'gateway',
+                fiat_onramp: 'gateway',
+                fiat_sell_request: 'gateway',
+                fiat_withdrawal: 'gateway',
+                fiat_offramp: 'gateway',
+                iot_purchase: 'gateway',
+                music: 'music',
+                music_tip: 'music',
+                music_purchase: 'music',
+                music_stream: 'music',
+                music_royalty: 'music',
+                music_play_reward: 'music',
+                t2e_reward: 't2e',
+                t2e_reward_thr: 't2e_reward_thr',
+                train_reward: 't2e',
+                network_reward: 'network',
+                validator_reward: 'network',
+            };
+            return map[kind] || kind;
+        }
+
+        function isTokenTx(tx) {
+            return normalizeKind(tx) === 'token_transfer';
+        }
+
+        function sanitizeTokenSymbol(symbol) {
+            const sym = String(symbol || '').toUpperCase().trim();
+            if (!sym || sym === 'TOKEN' || sym === 'TKN' || sym === 'UNKNOWN') {
+                return '';
+            }
+            return sym;
+        }
+
+        function displayAsset(tx) {
+            const sym = sanitizeTokenSymbol(tx.asset_symbol || tx.asset || tx.symbol);
+            return sym || 'THR';
+        };
+
+        // Helper functions for transaction processing
+        function getKind(tx) {
+            return (tx.kind || tx.type || '').toLowerCase();
+        }
+
+        function getAssetSymbol(tx) {
+            return (tx.asset_symbol || tx.asset || tx.symbol || 'THR').toUpperCase();
+        }
+
+        function isTokenTransfer(tx) {
+            const kind = getKind(tx);
+            return kind === 'token_transfer';
+        }
+
+        const isThrTransfer = (tx) => {
+            // Must be thr_transfer kind AND THR asset (not tokens)
+            return getKind(tx) === 'thr_transfer' && getAssetSymbol(tx) === 'THR';
+        };
+        const isSwapTx = (tx) => getKind(tx) === 'swap' || getKind(tx).startsWith('liquidity_') || getKind(tx).includes('pool');
+        const isBridgeTx = (tx) => getKind(tx).startsWith('bridge');
+        const isIoTTx = (tx) => getKind(tx).startsWith('iot') || getKind(tx).includes('parking') || getKind(tx) === 'autopilot';
+        const isAiCreditsTx = (tx) => getKind(tx).startsWith('ai') || getKind(tx).includes('credits');
+
+        function isAICreditPseudoTx(tx) {
+            const meta = (tx && tx.meta && typeof tx.meta === 'object') ? tx.meta : {};
+            const kind = getKind(tx);
+            const asset = getAssetSymbol(tx);
+            const note = String(tx.note || tx.description || '').toLowerCase();
+            return Boolean(
+                meta.is_ai_credit ||
+                meta.billing_unit === 'credits' ||
+                meta.category === 'ai_credits' ||
+                kind === 'ai_credits' ||
+                asset === 'CREDITS' ||
+                note.includes('ai credits')
+            );
+        }
+
+        function isL2ETx(tx) {
+            const category = getCanonicalCategory(tx);
+            const meta = (tx && tx.meta && typeof tx.meta === 'object') ? tx.meta : {};
+            const symbol = sanitizeTokenSymbol(tx.asset_symbol || tx.asset || tx.symbol);
+            const rawCategory = String(tx.category || meta.category || '').toLowerCase();
+            return ['l2e', 'l2e_reward', 'quiz_reward', 'course_reward'].includes(category)
+                || ['l2e', 'l2e_reward', 'quiz_reward', 'course_reward'].includes(rawCategory)
+                || symbol === 'L2E';
+        }
+
+        function isMusicTx(tx) {
+            const category = getCanonicalCategory(tx);
+            const meta = (tx && tx.meta && typeof tx.meta === 'object') ? tx.meta : {};
+            const rawCategory = String(tx.category || '').toLowerCase();
+            return category === 'music'
+                || ['music_stream', 'music_royalty', 'music_tip'].includes(rawCategory)
+                || String(meta.source || '').toLowerCase() === 'music_player';
+        }
+
+        function isArchitectJobTx(tx) {
+            const category = getCanonicalCategory(tx);
+            const rawCategory = String(tx.category || '').toLowerCase();
+            return category === 'architect_job' || rawCategory === 'architect_job';
+        }
+
+        function shouldExcludeTx(tx) {
+            const kind = getKind(tx);
+            const asset = getAssetSymbol(tx);
+            if (kind === 'block') return true;
+            if (!tx.from && !tx.to) return true;
+            if (tx.amount === 0 && asset === 'THR' && kind !== 'thr_transfer') return true;
+            if (getCanonicalCategory(tx) === 'ai_credits' || isAICreditPseudoTx(tx)) return true;
+            return false;
+        }
+
+        function isValidTokenSymbol(symbol) {
+            return symbol && !['THR', 'TOKEN', 'UNKNOWN_TOKEN'].includes(symbol);
+        }
+
+        function displayAmount(tx) {
+            const amountVal = tx.display_amount ?? tx.amount ?? 0;
+            const decimals = Number.isFinite(Number(tx.decimals)) ? Number(tx.decimals) : 6;
+            return Number(amountVal || 0).toFixed(decimals);
+        }
+
+        function setHistoryFilter(filter) {
+            historyState.filter = filter;
+            if (filter !== 'tokens') {
+                historyState.selectedToken = '';
+                historyState.tokenScope = 'all';
+            }
+            renderHistoryContent();
+        }
+
+        function setHistoryToken(token) {
+            historyState.selectedToken = token;
+            renderHistoryContent();
+        }
+
+        function setTokenScope(scope) {
+            historyState.tokenScope = scope || 'all';
+            renderHistoryContent();
+        }
+
+        function isCrossChainTokenTransfer(tx) {
+            const meta = (tx && tx.meta && typeof tx.meta === 'object') ? tx.meta : {};
+            const chain = String(meta.chain || meta.origin_chain || '').toLowerCase();
+            return Boolean(meta.cross_chain || meta.is_cross_chain || (chain && chain !== 'thronos'));
+        }
+
+        function resetHistoryState() {
+            historyState.filter = 'all';
+            historyState.selectedToken = '';
+            historyState.tokenScope = 'all';
+        }
+
+        function renderHistoryContent() {
+            const container = document.getElementById('historyContent');
+            const txs = (historyState.walletTxs || []).filter(tx => !shouldExcludeTx(tx));
+
+            if (!txs.length) {
+                container.innerHTML = '<p style="color: var(--widget-muted); text-align: center;">No transactions found</p>';
+                return;
+            }
+
+            // Token transfer transactions (native + cross-chain)
+            const tokenTxs = txs.filter(tx => {
+                const asset = getAssetSymbol(tx);
+                return isTokenTransfer(tx) && isValidTokenSymbol(asset);
+            });
+            const tokenSymbols = Array.from(new Set(
+                tokenTxs
+                    .map(tx => sanitizeTokenSymbol(tx.asset_symbol || tx.asset || tx.symbol))
+                    .filter(sym => sym)
+            ));
+
+            const filtered = txs.filter(tx => {
+                const category = getCanonicalCategory(tx);
+                const rawKind = (tx.kind || tx.type || '').toLowerCase();
+                if (historyState.filter === 'thr') return category === 'thr';
+                if (historyState.filter === 'mining') return category === 'mining';
+                if (historyState.filter === 'tokens') return category === 'tokens';
+                if (historyState.filter === 'swaps') return category === 'swaps';
+                if (historyState.filter === 'l2e') return isL2ETx(tx);
+                if (historyState.filter === 't2e') return category === 't2e_reward_thr';
+                if (historyState.filter === 'ai_credits') return false;
+                if (historyState.filter === 'iot') return category === 'iot';
+                if (historyState.filter === 'bridge') return category === 'bridge';
+                if (historyState.filter === 'architect_ai_jobs') return isArchitectJobTx(tx);
+                if (historyState.filter === 'liquidity') return category === 'liquidity';
+                if (historyState.filter === 'gateway') return category === 'gateway';
+                if (historyState.filter === 'music') return isMusicTx(tx);
+                return true;
+            }).filter(tx => {
+                if (historyState.filter === 'thr') {
+                    const c = getCanonicalCategory(tx);
+                    return c === 'thr' && !isAICreditPseudoTx(tx) && !isArchitectJobTx(tx) && !isMusicTx(tx) && !isL2ETx(tx) && c !== 't2e_reward_thr';
+                }
+                if (historyState.filter !== 'tokens') return true;
+                if (historyState.tokenScope === 'crosschain' && !isCrossChainTokenTransfer(tx)) return false;
+                if (historyState.tokenScope === 'native' && isCrossChainTokenTransfer(tx)) return false;
+                if (!historyState.selectedToken) return true;
+                return sanitizeTokenSymbol(tx.asset_symbol || tx.asset || tx.symbol) === historyState.selectedToken;
+            });
+
+            const tabs = [
+                { id: 'all', label: 'All' },
+                { id: 'thr', label: 'THR' },
+                { id: 'mining', label: '⛏️ Mining' },
+                { id: 'tokens', label: 'Tokens' },
+                { id: 'l2e', label: 'L2E' },
+                { id: 't2e', label: '🎓 T2E' },
+                { id: 'ai_credits', label: 'AI Credits (Chat)' },
+                { id: 'architect_ai_jobs', label: 'Architect / AI Jobs' },
+                { id: 'iot', label: 'IoT' },
+                { id: 'bridge', label: 'Bridge' },
+                { id: 'swaps', label: 'Swaps' },
+                { id: 'liquidity', label: 'Liquidity' },
+                { id: 'gateway', label: 'Gateway' },
+                { id: 'music', label: '🎵 Music' },
+            ];
+
+            let html = `
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+                    ${tabs.map(tab => `
+                        <button class="wallet-btn" style="padding:6px 10px; font-size:11px; ${historyState.filter === tab.id ? 'border-color:#00ff66;' : ''}"
+                            onclick="setHistoryFilter('${tab.id}')">
+                            ${tab.label}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+
+            if (historyState.filter === 'tokens') {
+                html += `
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+                        <button class="wallet-btn" style="padding:5px 10px; font-size:11px; ${historyState.tokenScope === 'all' ? 'border-color:#00ff66;' : ''}" onclick="setTokenScope('all')">All</button>
+                        <button class="wallet-btn" style="padding:5px 10px; font-size:11px; ${historyState.tokenScope === 'native' ? 'border-color:#00ff66;' : ''}" onclick="setTokenScope('native')">Native</button>
+                        <button class="wallet-btn" style="padding:5px 10px; font-size:11px; ${historyState.tokenScope === 'crosschain' ? 'border-color:#00ff66;' : ''}" onclick="setTokenScope('crosschain')">Cross-chain</button>
+                    </div>
+                `;
+                if (tokenSymbols.length) {
+                    html += `
+                        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+                            <button class="wallet-btn" style="padding:5px 10px; font-size:11px; ${!historyState.selectedToken ? 'border-color:#00ff66;' : ''}" onclick="setHistoryToken('')">All Tokens</button>
+                            ${tokenSymbols.map(sym => `
+                                <button class="wallet-btn" style="padding:5px 10px; font-size:11px; ${historyState.selectedToken === sym ? 'border-color:#00ff66;' : ''}" onclick="setHistoryToken('${sym}')">${sym}</button>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            }
+
+            if (historyState.filter === 'ai_credits') {
+                const creditEntries = historyState.aiLedger || [];
+                if (!creditEntries.length) {
+                    const bal = historyState.creditsBalance;
+                    const balHtml = Number.isFinite(Number(bal))
+                        ? `<p style="color: var(--widget-text); text-align:center; margin-top:6px;">Current AI Credits: ${Number(bal) || 0}</p>`
+                        : '';
+                    container.innerHTML = html + '<p style="color: var(--widget-muted); text-align: center;">No AI Credits ledger entries</p>' + balHtml;
+                    return;
+                }
+                html += creditEntries.map(e => {
+                    const delta = Number(e.delta || 0);
+                    const isIncoming = delta > 0;
+                    const sign = isIncoming ? '+' : '';
+                    const reason = String(e.reason || 'adjust').toLowerCase();
+                    const reasonLabel = reason === 'pack_purchase'
+                        ? 'AI Pack purchase'
+                        : (reason === 'chat_usage'
+                            ? 'Web chat usage'
+                            : (reason === 'voice_usage'
+                                ? 'Voice usage (X9)'
+                                : (reason === 't2e_reward' ? 'T2E reward' : reason)));
+                    const meta = (e.meta && typeof e.meta === 'object') ? e.meta : {};
+                    const usageChannel = reason === 'voice_usage' ? 'voice' : (reason === 'chat_usage' ? 'web' : 'system');
+                    const metaHint = meta.pack_code
+                        ? `Pack: ${meta.pack_code}`
+                        : (meta.model ? `Model: ${meta.model}` : '');
+                    return `
+                        <div class="tx-item">
+                            <div class="tx-header">
+                                <span class="tx-amount ${isIncoming ? 'incoming' : 'outgoing'}">${sign}${delta} credits</span>
+                                <span class="tx-status confirmed">${reasonLabel}</span>
+                            </div>
+                            <div class="tx-details">Channel: ${usageChannel}${metaHint ? ` • ${metaHint}` : ''}</div>
+                            <div class="tx-details">
+                                ${e.ts || e.timestamp || 'Unknown time'}<br>
+                                Balance: ${e.balance_before ?? '-'} → ${e.balance_after ?? '-'}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                container.innerHTML = html;
+                return;
+            }
+
+            let t2eCreditCount = 0;
+            if (historyState.filter === 't2e') {
+                const t2eCredits = (historyState.aiLedger || []).filter(e => String(e.reason || '').toLowerCase() === 't2e_reward');
+                t2eCreditCount = t2eCredits.length;
+                if (t2eCredits.length) {
+                    html += t2eCredits.map(e => `
+                        <div class="tx-item">
+                            <div class="tx-header">
+                                <span class="tx-amount incoming">+${Number(e.delta || 0)} credits</span>
+                                <span class="tx-status confirmed">T2E credit reward</span>
+                            </div>
+                            <div class="tx-details">${e.ts || e.timestamp || 'Unknown time'}<br>Balance: ${e.balance_before ?? '-'} → ${e.balance_after ?? '-'}</div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            if (!filtered.length && historyState.filter !== 't2e') {
+                container.innerHTML = html + '<p style="color: var(--widget-muted); text-align: center;">No transactions match this filter</p>';
+                return;
+            }
+            if (historyState.filter === 't2e' && !filtered.length && t2eCreditCount === 0) {
+                container.innerHTML = html + '<p style="color: var(--widget-muted); text-align: center;">No T2E rewards found</p>';
+                return;
+            }
+
+            html += filtered.map(tx => {
+                const kind = normalizeKind(tx);
+                const rawKind = (tx.kind || tx.type || '').toLowerCase();
+                const isIncoming = tx.direction === 'in' || tx.to === walletAddress;
+                const isSwap = kind === 'swap' || kind === 'pool_swap';
+                const isMusicReward = isMusicTx(tx);
+                const amountClass = isSwap ? 'swap' : (isIncoming ? 'incoming' : 'outgoing');
+                const sign = isSwap ? '↔︎' : (isIncoming ? '+' : '-');
+                const status = tx.status || 'confirmed';
+                const asset = getAssetSymbol(tx);
+                const amountStr = displayAmount(tx);
+
+                // Build reward split display for music transactions
+                let rewardSplitHtml = '';
+                if (isMusicReward && tx.reward_split) {
+                    const split = tx.reward_split;
+                    rewardSplitHtml = `
+                        <div style="font-size:10px; margin-top:4px; padding:4px; background:rgba(60,255,122,0.1); border-radius:4px;">
+                            <div style="color:#3CFF7A;">🎵 80/10/10 Split:</div>
+                            <div>Artist: ${Number(split.artist || 0).toFixed(6)} THR (80%)</div>
+                            <div>Network: ${Number(split.network || 0).toFixed(6)} THR (10%)</div>
+                            <div>AI/T2E: ${Number(split.ai_t2e || split.ai || 0).toFixed(6)} THR (10%)</div>
+                            ${tx.gps_recorded ? '<div style="color:#5C9FFF;">📍 GPS telemetry recorded (Driver Training)</div>' : ''}
+                            ${tx.t2e_contribution_recorded ? '<div style="color:#FFD700;">🎓 T2E contribution recorded</div>' : ''}
+                        </div>
+                    `;
+                }
+
+                // Show track info for music transactions
+                let trackInfo = '';
+                if (isMusicReward && tx.track_title) {
+                    trackInfo = `<br>🎵 Track: ${tx.track_title}`;
+                }
+
+                const meta = (tx.meta && typeof tx.meta === 'object') ? tx.meta : {};
+                const crossChain = getKind(tx) === 'token_transfer' && isCrossChainTokenTransfer(tx);
+                const tokenTransferLabel = crossChain ? 'Token Transfer (Cross-chain)' : (getKind(tx) === 'token_transfer' ? 'Token Transfer' : '');
+                const chainHint = meta.chain || meta.origin_chain || '';
+                const logoUrl = meta.logo_url || tx.logo_url || '';
+                const logoBadge = (getKind(tx) === 'token_transfer')
+                    ? (logoUrl ? `<img src="${logoUrl}" alt="${asset}" style="width:14px;height:14px;border-radius:50%;margin-right:6px;vertical-align:middle;" onerror="this.style.display='none'">` : `🪙 `)
+                    : '';
+                return `
+                    <div class="tx-item">
+                        <div class="tx-header">
+                            <span class="tx-amount ${amountClass}">${logoBadge}${sign}${amountStr} ${asset}</span>
+                            <span class="tx-status ${status}">${status.toUpperCase()}</span>
+                        </div>
+                        <div class="tx-details">
+                            ${isSwap ? 'Trader: ' + (tx.from || walletAddress) : (isIncoming ? 'From: ' + (tx.from || '') : 'To: ' + (tx.to || ''))}${trackInfo}<br>
+                            ${tx.timestamp || 'Unknown time'}${tokenTransferLabel ? `<br>${tokenTransferLabel}` : ''}${chainHint ? `<br>Chain: ${chainHint}` : ''}<br>
+                            TXID: ${(tx.tx_id || 'pending').substring(0, 16)}...
+                            ${rewardSplitHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        async function openHistoryModal() {
+            document.getElementById('historyModal').classList.add('active');
+            document.getElementById('historyContent').innerHTML = '<p style="color: var(--widget-muted);">Loading...</p>';
+            resetHistoryState();
+
+            try {
+                // Add 15-second timeout to prevent infinite loading
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+                const res = await fetch(`/api/wallet/history?address=${encodeURIComponent(walletAddress)}&limit=500`, {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (!res.ok) throw new Error('Failed to load history');
+                const data = await res.json();
+
+                historyState.walletTxs = trimHistory(((data.transactions || data.items || [])).slice().reverse());
+                const summary = (data && typeof data.summary === 'object') ? data.summary : {};
+                historyState.creditsBalance = Number(summary.ai_credits ?? summary.credits);
+                try {
+                    const creditsRes = await fetch(`/api/ai_credits/ledger?wallet=${encodeURIComponent(walletAddress)}&limit=500`);
+                    const creditsData = await creditsRes.json();
+                    historyState.aiLedger = Array.isArray(creditsData.items) ? creditsData.items : (Array.isArray(creditsData.entries) ? creditsData.entries : []);
+                } catch (_) {
+                    historyState.aiLedger = [];
+                }
+                renderHistoryContent();
+            } catch (e) {
+                console.error('Error loading history:', e);
+                const errorMsg = e.name === 'AbortError'
+                    ? 'Request timed out. Please try again.'
+                    : 'Error loading transaction history';
+                document.getElementById('historyContent').innerHTML = `<p style="color: #ff4444;">${errorMsg}</p>`;
+            }
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').classList.remove('active');
+            resetHistoryState();
+        }
+
+        // Send Modal with Pending TX Polling
+        let pendingTxId = null;
+        let pollInterval = null;
+
+        function openSendModal() {
+            document.getElementById('sendModal').classList.add('active');
+            document.getElementById('sendStatus').innerHTML = '';
+            document.getElementById('sendForm').reset();
+
+            // Populate token dropdown with available tokens
+            const selectElement = document.getElementById('sendToken');
+            selectElement.innerHTML = '<option value="THR">THR</option>';
+            allTokens.forEach(token => {
+                if (token.balance > 0) {
+                    selectElement.innerHTML += `<option value="${token.symbol}">${token.symbol} (${token.balance.toFixed(token.decimals)})</option>`;
+                }
+            });
+        }
+
+        function closeSendModal() {
+            document.getElementById('sendModal').classList.remove('active');
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+            pendingTxId = null;
+        }
+
+        async function handleSend(e) {
+            e.preventDefault();
+
+            const toAddress = document.getElementById('sendToAddress').value.trim();
+            const amount = parseFloat(document.getElementById('sendAmount').value);
+            const token = document.getElementById('sendToken').value;
+            const secret = document.getElementById('sendSecret').value.trim();
+
+            const submitBtn = document.getElementById('sendSubmitBtn');
+            const statusDiv = document.getElementById('sendStatus');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            statusDiv.innerHTML = '<span style="color: #ffd700;">⏳ Processing transaction...</span>';
+
+            try {
+                const res = await fetch('/api/wallet/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        from: walletAddress,
+                        to: toAddress,
+                        amount: amount,
+                        token: token,
+                        secret: secret,
+                        passphrase: '',
+                        speed: 'fast'
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.tx_id || data.status === 'success') {
+                    pendingTxId = data.tx_id;
+                    statusDiv.innerHTML = `<span style="color: var(--widget-accent);">✅ Transaction submitted!<br>TXID: ${(pendingTxId || 'pending').substring(0, 16)}...</span>`;
+
+                    // Start polling for status
+                    if (pendingTxId) {
+                        pollTransactionStatus(pendingTxId, statusDiv);
+                    }
+
+                    // Reset form after 2 seconds
+                    setTimeout(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<span class="lang-el">Αποστολή</span><span class="lang-en">Send</span>';
+                        loadWalletData(); // Refresh wallet data
+                    }, 2000);
+                } else {
+                    throw new Error(data.message || data.error || 'Transaction failed');
+                }
+            } catch (err) {
+                console.error('Send error:', err);
+                statusDiv.innerHTML = `<span style="color: #ff4444;">❌ Error: ${err.message}</span>`;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span class="lang-el">Αποστολή</span><span class="lang-en">Send</span>';
+            }
+        }
+
+        async function pollTransactionStatus(txId, statusDiv) {
+            if (pollInterval) clearInterval(pollInterval);
+
+            let attempts = 0;
+            const maxAttempts = 30; // Poll for up to 5 minutes (30 * 10s)
+
+            pollInterval = setInterval(async () => {
+                attempts++;
+
+                try {
+                    const res = await fetch(`/api/tx/status?tx_id=${encodeURIComponent(txId)}`);
+                    const data = await res.json();
+
+                    if (data.status === 'confirmed') {
+                        statusDiv.innerHTML = `<span style="color: var(--widget-accent);">✅ Transaction confirmed!<br>Block: ${data.block || 'N/A'}</span>`;
+                        clearInterval(pollInterval);
+                        pollInterval = null;
+                        loadWalletData(); // Refresh wallet
+                    } else if (data.status === 'failed') {
+                        statusDiv.innerHTML = `<span style="color: #ff4444;">❌ Transaction failed: ${data.message || 'Unknown error'}</span>`;
+                        clearInterval(pollInterval);
+                        pollInterval = null;
+                    } else if (attempts >= maxAttempts) {
+                        statusDiv.innerHTML += '<br><span style="color: #ffd700;">⏱️ Still pending. Check back later.</span>';
+                        clearInterval(pollInterval);
+                        pollInterval = null;
+                    }
+                } catch (err) {
+                    console.error('Poll error:', err);
+                    if (attempts >= maxAttempts) {
+                        clearInterval(pollInterval);
+                        pollInterval = null;
+                    }
+                }
+            }, 10000); // Poll every 10 seconds
+        }
+
+        // Bridge Modal
+        async function openBridgeModal() {
+            document.getElementById('bridgeModal').classList.add('active');
+            loadBridgeDeposit();
+        }
+
+        function closeBridgeModal() {
+            document.getElementById('bridgeModal').classList.remove('active');
+        }
+
+        function switchBridgeTab(tab) {
+            document.querySelectorAll('#bridgeModal .wallet-tab').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#bridgeModal .tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tab === 'deposit') {
+                document.querySelector('#bridgeModal .wallet-tab:first-child').classList.add('active');
+                document.getElementById('depositTab').classList.add('active');
+            } else {
+                document.querySelector('#bridgeModal .wallet-tab:last-child').classList.add('active');
+                document.getElementById('withdrawTab').classList.add('active');
+            }
+        }
+
+        async function loadBridgeDeposit() {
+            const container = document.getElementById('depositAddressContainer');
+            container.innerHTML = '<p style="color: var(--widget-muted);">Loading deposit address...</p>';
+
+            try {
+                const res = await fetch(`/api/bridge/deposit?wallet=${encodeURIComponent(walletAddress)}`);
+                if (!res.ok) throw new Error('Failed to load deposit address');
+                const data = await res.json();
+
+                if (data.ok && data.deposit_address) {
+                    container.innerHTML = `
+                        <div class="deposit-address">
+                            <div style="font-size: 11px; color: var(--widget-muted); margin-bottom: 8px;">
+                                <span class="lang-el">Διεύθυνση Κατάθεσης BTC</span>
+                                <span class="lang-en">BTC Deposit Address</span>
+                            </div>
+                            <div style="color: var(--widget-accent); font-weight: 600;">${data.deposit_address}</div>
+                        </div>
+                        <button class="copy-btn" onclick="copyDepositAddress('${data.deposit_address}')">
+                            📋 <span class="lang-el">Αντιγραφή</span><span class="lang-en">Copy</span>
+                        </button>
+                        <p style="color: var(--widget-muted); font-size: 11px; margin-top: 15px;">
+                            <span class="lang-el">⚠️ Στείλτε μόνο BTC σε αυτή τη διεύθυνση. Άλλα assets θα χαθούν.</span>
+                            <span class="lang-en">⚠️ Only send BTC to this address. Other assets will be lost.</span>
+                        </p>
+                    `;
+                } else {
+                    throw new Error(data.error || 'Invalid response');
+                }
+            } catch (err) {
+                console.error('Bridge deposit error:', err);
+                container.innerHTML = `<p style="color: #ff4444;">Error: ${err.message}</p>`;
+            }
+        }
+
+        function copyDepositAddress(address) {
+            navigator.clipboard.writeText(address).then(() => {
+                alert('✅ Address copied to clipboard!');
+            }).catch(() => {
+                prompt('Copy this address:', address);
+            });
+        }
+
+        // Music/Telemetry Modal Functions
+        function openMusicTelemetryModal() {
+            document.getElementById('musicTelemetryModal').classList.add('active');
+            switchMusicTab('player');
+        }
+
+        function closeMusicTelemetryModal() {
+            document.getElementById('musicTelemetryModal').classList.remove('active');
+        }
+
+        function switchMusicTab(tab) {
+            document.querySelectorAll('#musicTelemetryModal .wallet-tab').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#musicTelemetryModal .tab-content').forEach(content => content.classList.remove('active'));
+
+            const tabs = { 'player': 0, 'whisper': 1, 'telemetry': 2 };
+            const index = tabs[tab] || 0;
+            document.querySelectorAll('#musicTelemetryModal .wallet-tab')[index].classList.add('active');
+
+            if (tab === 'player') {
+                document.getElementById('playerTab').classList.add('active');
+            } else if (tab === 'whisper') {
+                document.getElementById('whisperTab').classList.add('active');
+            } else if (tab === 'telemetry') {
+                document.getElementById('telemetryTab').classList.add('active');
+            }
+        }
+
+        function generateWhisperNote() {
+            const dataStr = document.getElementById('whisperData').value.trim();
+            const freq = parseInt(document.getElementById('whisperFreq').value);
+
+            if (!dataStr) {
+                alert('Please enter transaction data');
+                return;
+            }
+
+            try {
+                // Basic audio generation using Web Audio API
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const duration = 2; // 2 seconds
+                const sampleRate = audioContext.sampleRate;
+                const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+                const data = buffer.getChannelData(0);
+
+                // Generate sine wave at specified frequency
+                for (let i = 0; i < data.length; i++) {
+                    data[i] = Math.sin(2 * Math.PI * freq * i / sampleRate) * 0.3;
+                }
+
+                // Create audio source
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContext.destination);
+
+                // Show player
+                document.getElementById('whisperPlayer').style.display = 'block';
+
+                // Play audio
+                source.start();
+
+                // Store buffer for download
+                window.whisperBuffer = buffer;
+
+                alert('✅ Audio generated! Press play to hear it.');
+            } catch (error) {
+                console.error('Audio generation error:', error);
+                alert('Error generating audio. Check console for details.');
+            }
+        }
+
+        function downloadWhisper() {
+            if (!window.whisperBuffer) {
+                alert('Please generate audio first');
+                return;
+            }
+            // WAV download would require additional encoding
+            alert('Download feature coming soon. Audio can be played from the player above.');
+        }
+
+        function requestTelemetry() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    document.getElementById('telemetryLat').textContent = position.coords.latitude.toFixed(6);
+                    document.getElementById('telemetryLng').textContent = position.coords.longitude.toFixed(6);
+                    document.getElementById('telemetrySpeed').textContent = (position.coords.speed || 0).toFixed(1) + ' km/h';
+                    document.getElementById('telemetryHeading').textContent = (position.coords.heading || 0).toFixed(0) + '°';
+                },
+                (error) => {
+                    console.error('Geolocation error:', error);
+                    alert('Unable to retrieve location. Please enable GPS/location services.');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        // Close modals on background click
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                closeHistoryModal();
+                closeSendModal();
+                closeBridgeModal();
+                closeMusicTelemetryModal();
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        });
+    </script>
+</body>
+</html>

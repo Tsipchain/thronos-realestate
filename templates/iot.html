@@ -1,0 +1,1776 @@
+{% extends "base.html" %}
+
+{% block title %}📡 Thronos IoT & Smart City{% endblock %}
+
+{% block styles %}
+<style>
+    /* Language support */
+    .lang-en, .lang-ja, .lang-ru, .lang-es { display: none; }
+    body.lang-en .lang-el { display: none; }
+    body.lang-en .lang-en { display: inline; }
+    body.lang-ja .lang-el { display: none; }
+    body.lang-ja .lang-ja { display: inline; }
+    body.lang-ru .lang-el { display: none; }
+    body.lang-ru .lang-ru { display: inline; }
+    body.lang-es .lang-el { display: none; }
+    body.lang-es .lang-es { display: inline; }
+
+    .hero-iot {
+        background: linear-gradient(135deg, #000 0%, #001a00 50%, #000 100%);
+        border: 2px solid;
+        border-image: linear-gradient(135deg, #00ff66 0%, #0099ff 100%) 1;
+        border-radius: 20px;
+        padding: 40px 30px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .hero-iot h1 {
+        font-size: 2.5em;
+        background: linear-gradient(135deg, #00ff66, #0099ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 15px;
+    }
+
+    .hero-iot p {
+        color: #888;
+        font-size: 1.1em;
+        max-width: 700px;
+        margin: 0 auto 20px;
+    }
+
+    .iot-section {
+        margin-bottom: 40px;
+    }
+
+    .iot-section h2 {
+        color: #00ff66;
+        margin-bottom: 20px;
+        font-size: 1.5em;
+        border-bottom: 1px solid #1a3b2e;
+        padding-bottom: 10px;
+    }
+
+    .tech-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .tech-card {
+        background: linear-gradient(135deg, #0a0f0a 0%, #071810 100%);
+        border: 1px solid #1a3b2e;
+        border-radius: 16px;
+        padding: 25px;
+        transition: all 0.3s;
+    }
+
+    .tech-card:hover {
+        border-color: #00ff66;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 255, 102, 0.15);
+    }
+
+    .tech-card .icon {
+        font-size: 3em;
+        margin-bottom: 15px;
+    }
+
+    .tech-card h3 {
+        color: #00ff66;
+        margin-bottom: 10px;
+    }
+
+    .tech-card p {
+        color: #888;
+        font-size: 0.9em;
+        line-height: 1.6;
+    }
+
+    .tech-features {
+        list-style: none;
+        padding: 0;
+        margin: 15px 0 0 0;
+    }
+
+    .tech-features li {
+        padding: 5px 0;
+        color: #ccc;
+        font-size: 0.85em;
+        border-bottom: 1px solid #1a3b2e;
+    }
+
+    .tech-features li:last-child {
+        border-bottom: none;
+    }
+
+    .tech-features li::before {
+        content: '✓ ';
+        color: #00ff66;
+    }
+
+    /* Purchase Packs */
+    .packs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-top: 20px;
+    }
+
+    .pack-card {
+        background: linear-gradient(135deg, #0a0a0a 0%, #0a1a10 100%);
+        border: 2px solid #1a3b2e;
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        position: relative;
+        transition: all 0.3s;
+    }
+
+    .pack-card.popular {
+        border-color: #ffd700;
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+    }
+
+    .pack-card.popular::before {
+        content: 'POPULAR';
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #ffd700, #ff9500);
+        color: #000;
+        padding: 5px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.8em;
+    }
+
+    .pack-card:hover {
+        transform: translateY(-5px);
+        border-color: #00ff66;
+    }
+
+    .pack-icon {
+        font-size: 4em;
+        margin-bottom: 15px;
+    }
+
+    .pack-name {
+        font-size: 1.5em;
+        color: #00ff66;
+        margin-bottom: 10px;
+    }
+
+    .pack-price {
+        font-size: 2.5em;
+        color: #ffd700;
+        font-weight: bold;
+    }
+
+    .pack-price small {
+        font-size: 0.4em;
+        color: #888;
+    }
+
+    .pack-features {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+        text-align: left;
+    }
+
+    .pack-features li {
+        padding: 8px 0;
+        color: #ccc;
+        font-size: 0.9em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .pack-features li::before {
+        content: '✓';
+        color: #00ff66;
+        font-weight: bold;
+    }
+
+    .pack-btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #00ff00 0%, #00ff66 100%);
+        border: none;
+        border-radius: 10px;
+        color: #000;
+        font-weight: bold;
+        font-size: 1em;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .pack-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 255, 102, 0.4);
+    }
+
+    .pack-btn.enterprise {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: #fff;
+    }
+
+    /* Smart Parking */
+    .parking-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .spot {
+        border: 2px solid #333;
+        border-radius: 8px;
+        padding: 15px 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .spot.free { border-color: #0f0; background: rgba(0, 255, 0, 0.1); }
+    .spot.occupied { border-color: #f00; background: rgba(255, 0, 0, 0.1); opacity: 0.7; cursor: not-allowed; }
+    .spot.reserved { border-color: #ff0; background: rgba(255, 255, 0, 0.1); }
+
+    .spot-id { font-weight: bold; font-size: 1.1em; color: #fff; }
+    .spot-status { font-size: 0.7em; margin-top: 5px; color: #888; }
+
+    /* Vehicle Brands */
+    .vehicle-brands {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: center;
+        margin: 20px 0;
+    }
+
+    .brand-badge {
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid #1a3b2e;
+        border-radius: 10px;
+        padding: 10px 20px;
+        color: #888;
+        font-size: 0.9em;
+        transition: all 0.3s;
+    }
+
+    .brand-badge:hover {
+        border-color: #00ff66;
+        color: #00ff66;
+    }
+
+    .brand-badge.active {
+        border-color: #00ff66;
+        color: #00ff66;
+        background: rgba(0, 255, 102, 0.1);
+    }
+
+    /* Water Management */
+    .water-panel {
+        background: linear-gradient(135deg, #0a0f0a 0%, #001020 100%);
+        border: 1px solid #0099ff;
+        border-radius: 16px;
+        padding: 25px;
+    }
+
+    .water-level {
+        height: 30px;
+        background: #111;
+        border-radius: 15px;
+        overflow: hidden;
+        margin-top: 10px;
+        border: 1px solid #333;
+    }
+
+    .water-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #0066ff, #00ccff);
+        transition: width 1s;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 10px;
+        font-weight: bold;
+        color: #fff;
+        font-size: 0.8em;
+    }
+
+    /* Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(8px);
+        z-index: 3000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #0a0f0a 0%, #071810 100%);
+        border: 2px solid #00ff66;
+        padding: 30px;
+        border-radius: 20px;
+        max-width: 450px;
+        width: 90%;
+        text-align: center;
+    }
+
+    .stripe-secure {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+        color: #888;
+        font-size: 0.85em;
+    }
+
+    .stripe-secure img {
+        height: 24px;
+    }
+
+    .lang-toggle-iot {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 255, 102, 0.2);
+        border: 1px solid #00ff66;
+        color: #00ff66;
+        padding: 10px 20px;
+        border-radius: 30px;
+        cursor: pointer;
+        z-index: 100;
+    }
+
+    .lang-toggle-iot:hover {
+        background: rgba(0, 255, 102, 0.3);
+    }
+
+    /* Music/Telemetry Modal Styles */
+    .tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    .tab {
+        background: rgba(0,255,102,0.1);
+        border: 1px solid rgba(0,255,102,0.3);
+        color: #0f0;
+        padding: 8px 16px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.9em;
+        transition: all 0.2s;
+    }
+    .tab.active {
+        background: rgba(0,255,102,0.3);
+        border-color: #0f0;
+        font-weight: bold;
+    }
+    .tab:hover {
+        background: rgba(0,255,102,0.2);
+    }
+    .tab-content {
+        display: none;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    .telemetry-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    .sensor-card {
+        background: rgba(0,255,102,0.05);
+        border: 1px solid rgba(0,255,102,0.2);
+        padding: 15px;
+        border-radius: 6px;
+    }
+    .sensor-card h4 {
+        margin: 0 0 10px 0;
+        color: #0f0;
+    }
+    .sensor-value {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #0ff;
+        margin-bottom: 10px;
+    }
+    .gps-status {
+        margin: 15px 0;
+    }
+    .status-indicator {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: 2px solid #666;
+        background: #111;
+    }
+    .status-indicator.online {
+        border-color: #0f0;
+        background: rgba(0,255,0,0.1);
+    }
+    .status-indicator .pulse {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #666;
+        margin-right: 8px;
+    }
+    .status-indicator.online .pulse {
+        background: #0f0;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+    .gps-map {
+        width: 100%;
+        height: 300px;
+        background: #000;
+        border: 1px solid #0f0;
+        margin: 15px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-family: monospace;
+    }
+    .telemetry-table {
+        width: 100%;
+        margin: 15px 0;
+    }
+    .telemetry-table td {
+        padding: 5px;
+        border-bottom: 1px solid #222;
+    }
+    .telemetry-table td:first-child {
+        color: #888;
+        width: 40%;
+    }
+    .telemetry-table td:last-child {
+        color: #0ff;
+        font-family: monospace;
+    }
+    .battery-bar {
+        width: 100%;
+        height: 20px;
+        background: #222;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    #battery-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #0f0, #ff0);
+        transition: width 0.5s;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="hero-iot">
+    <h1>📡
+        <span class="lang-el">IoT & Έξυπνη Πόλη</span>
+        <span class="lang-en">IoT & Smart City</span>
+        <span class="lang-ja">IoT ＆ スマートシティ</span>
+        <span class="lang-ru">IoT и Умный город</span>
+        <span class="lang-es">IoT y Ciudad Inteligente</span>
+    </h1>
+    <p>
+        <span class="lang-el">Συνδέστε οχήματα, αισθητήρες και έξυπνες συσκευές στο δίκτυο Thronos. Κερδίστε THR με κάθε αλληλεπίδραση.</span>
+        <span class="lang-en">Connect vehicles, sensors, and smart devices to the Thronos network. Earn THR with every interaction.</span>
+        <span class="lang-ja">車両、センサー、スマートデバイスをThronosネットワークに接続。すべてのインタラクションでTHRを獲得。</span>
+        <span class="lang-ru">Подключите транспортные средства, датчики и умные устройства к сети Thronos. Зарабатывайте THR с каждым взаимодействием.</span>
+        <span class="lang-es">Conecte vehículos, sensores y dispositivos inteligentes a la red Thronos. Gane THR con cada interacción.</span>
+    </p>
+</div>
+
+<!-- Supported Technologies -->
+<div class="iot-section">
+    <h2>🔌
+        <span class="lang-el">Υποστηριζόμενες Τεχνολογίες</span>
+        <span class="lang-en">Supported Technologies</span>
+        <span class="lang-ja">対応技術</span>
+        <span class="lang-ru">Поддерживаемые технологии</span>
+        <span class="lang-es">Tecnologías Compatibles</span>
+    </h2>
+
+    <div class="tech-grid">
+        <div class="tech-card">
+            <div class="icon">🚗</div>
+            <h3>
+                <span class="lang-el">Έξυπνα Οχήματα</span>
+                <span class="lang-en">Smart Vehicles</span>
+                <span class="lang-ja">スマートビークル</span>
+                <span class="lang-ru">Умные автомобили</span>
+                <span class="lang-es">Vehículos Inteligentes</span>
+            </h3>
+            <p>
+                <span class="lang-el">Σύνδεση με OBD-II, CAN bus και τελεματικά συστήματα για real-time tracking και rewards.</span>
+                <span class="lang-en">Connect via OBD-II, CAN bus and telematics systems for real-time tracking and rewards.</span>
+                <span class="lang-ja">OBD-II、CANバス、テレマティクスシステムで接続し、リアルタイム追跡と報酬を獲得。</span>
+                <span class="lang-ru">Подключение через OBD-II, CAN шину и телематику для отслеживания и наград.</span>
+                <span class="lang-es">Conexión vía OBD-II, CAN bus y telemática para seguimiento y recompensas en tiempo real.</span>
+            </p>
+            <ul class="tech-features">
+                <li>Renault Clio 2024</li>
+                <li>Tesla Model S/3/X/Y</li>
+                <li>BMW iX / i4</li>
+                <li>Mercedes EQS/EQE</li>
+                <li>VW ID.4 / ID.Buzz</li>
+                <li>Hyundai Ioniq 5/6</li>
+                <li>Toyota bZ4X</li>
+            </ul>
+        </div>
+
+        <div class="tech-card">
+            <div class="icon">🏠</div>
+            <h3>
+                <span class="lang-el">Έξυπνο Σπίτι</span>
+                <span class="lang-en">Smart Home</span>
+                <span class="lang-ja">スマートホーム</span>
+                <span class="lang-ru">Умный дом</span>
+                <span class="lang-es">Hogar Inteligente</span>
+            </h3>
+            <p>
+                <span class="lang-el">Αυτοματισμοί για ενεργειακή εξοικονόμηση και έξυπνη διαχείριση πόρων.</span>
+                <span class="lang-en">Automation for energy savings and smart resource management.</span>
+                <span class="lang-ja">省エネと賢いリソース管理のための自動化。</span>
+                <span class="lang-ru">Автоматизация для экономии энергии и умного управления ресурсами.</span>
+                <span class="lang-es">Automatización para ahorro de energía y gestión inteligente de recursos.</span>
+            </p>
+            <ul class="tech-features">
+                <li>Google Nest Hub</li>
+                <li>Amazon Echo / Alexa</li>
+                <li>Apple HomeKit</li>
+                <li>Philips Hue</li>
+                <li>Samsung SmartThings</li>
+                <li>IKEA Tradfri</li>
+            </ul>
+        </div>
+
+        <div class="tech-card">
+            <div class="icon">🏭</div>
+            <h3>
+                <span class="lang-el">Βιομηχανικά IoT</span>
+                <span class="lang-en">Industrial IoT</span>
+                <span class="lang-ja">産業用IoT</span>
+                <span class="lang-ru">Промышленный IoT</span>
+                <span class="lang-es">IoT Industrial</span>
+            </h3>
+            <p>
+                <span class="lang-el">Enterprise-grade αισθητήρες και PLC για βιομηχανικές εφαρμογές.</span>
+                <span class="lang-en">Enterprise-grade sensors and PLCs for industrial applications.</span>
+                <span class="lang-ja">産業用アプリケーション向けのエンタープライズグレードセンサーとPLC。</span>
+                <span class="lang-ru">Датчики и ПЛК промышленного класса для производственных приложений.</span>
+                <span class="lang-es">Sensores y PLCs de grado empresarial para aplicaciones industriales.</span>
+            </p>
+            <ul class="tech-features">
+                <li>Siemens SIMATIC</li>
+                <li>ABB Ability</li>
+                <li>Schneider Electric</li>
+                <li>Rockwell Automation</li>
+                <li>Honeywell Forge</li>
+            </ul>
+        </div>
+
+        <div class="tech-card">
+            <div class="icon">🌡️</div>
+            <h3>
+                <span class="lang-el">Περιβαλλοντικοί Αισθητήρες</span>
+                <span class="lang-en">Environmental Sensors</span>
+                <span class="lang-ja">環境センサー</span>
+                <span class="lang-ru">Экологические датчики</span>
+                <span class="lang-es">Sensores Ambientales</span>
+            </h3>
+            <p>
+                <span class="lang-el">Παρακολούθηση ποιότητας αέρα, νερού και περιβαλλοντικών συνθηκών.</span>
+                <span class="lang-en">Monitor air quality, water and environmental conditions.</span>
+                <span class="lang-ja">空気質、水質、環境条件を監視。</span>
+                <span class="lang-ru">Мониторинг качества воздуха, воды и условий окружающей среды.</span>
+                <span class="lang-es">Monitoreo de calidad del aire, agua y condiciones ambientales.</span>
+            </p>
+            <ul class="tech-features">
+                <li>CO2 / PM2.5 / PM10</li>
+                <li>Temperature & Humidity</li>
+                <li>Water Quality (pH, TDS)</li>
+                <li>Noise Level Monitoring</li>
+                <li>Solar Radiation</li>
+            </ul>
+        </div>
+
+        <div class="tech-card">
+            <div class="icon">⚡</div>
+            <h3>
+                <span class="lang-el">Ενέργεια & Grid</span>
+                <span class="lang-en">Energy & Grid</span>
+                <span class="lang-ja">エネルギー＆グリッド</span>
+                <span class="lang-ru">Энергия и сеть</span>
+                <span class="lang-es">Energía y Red</span>
+            </h3>
+            <p>
+                <span class="lang-el">Έξυπνοι μετρητές και διαχείριση ενεργειακού δικτύου.</span>
+                <span class="lang-en">Smart meters and energy grid management.</span>
+                <span class="lang-ja">スマートメーターとエネルギーグリッド管理。</span>
+                <span class="lang-ru">Умные счётчики и управление энергосетью.</span>
+                <span class="lang-es">Medidores inteligentes y gestión de red eléctrica.</span>
+            </p>
+            <ul class="tech-features">
+                <li>Smart Meters (P1/DSMR)</li>
+                <li>Solar Inverters</li>
+                <li>EV Charging Stations</li>
+                <li>Battery Storage</li>
+                <li>Grid Frequency Sensors</li>
+            </ul>
+        </div>
+
+        <div class="tech-card">
+            <div class="icon">🅿️</div>
+            <h3>
+                <span class="lang-el">Έξυπνο Πάρκινγκ</span>
+                <span class="lang-en">Smart Parking</span>
+                <span class="lang-ja">スマートパーキング</span>
+                <span class="lang-ru">Умная парковка</span>
+                <span class="lang-es">Estacionamiento Inteligente</span>
+            </h3>
+            <p>
+                <span class="lang-el">Real-time διαθεσιμότητα και κράτηση θέσεων με THR.</span>
+                <span class="lang-en">Real-time availability and spot reservation with THR.</span>
+                <span class="lang-ja">リアルタイムの空き状況とTHRでの予約。</span>
+                <span class="lang-ru">Доступность и бронирование мест в реальном времени с THR.</span>
+                <span class="lang-es">Disponibilidad en tiempo real y reserva de espacios con THR.</span>
+            </p>
+            <ul class="tech-features">
+                <li>Ultrasonic Sensors</li>
+                <li>Camera Detection (AI)</li>
+                <li>RFID/NFC Access</li>
+                <li>License Plate Recognition</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Supported Vehicle Brands -->
+<div class="iot-section">
+    <h2>🚘
+        <span class="lang-el">Συμβατές Μάρκες Οχημάτων</span>
+        <span class="lang-en">Compatible Vehicle Brands</span>
+        <span class="lang-ja">対応車両ブランド</span>
+        <span class="lang-ru">Совместимые марки авто</span>
+        <span class="lang-es">Marcas de Vehículos Compatibles</span>
+    </h2>
+
+    <div class="vehicle-brands">
+        <span class="brand-badge active">🇫🇷 Renault</span>
+        <span class="brand-badge active">🇺🇸 Tesla</span>
+        <span class="brand-badge">🇩🇪 BMW</span>
+        <span class="brand-badge">🇩🇪 Mercedes-Benz</span>
+        <span class="brand-badge">🇩🇪 Volkswagen</span>
+        <span class="brand-badge">🇩🇪 Audi</span>
+        <span class="brand-badge">🇰🇷 Hyundai</span>
+        <span class="brand-badge">🇰🇷 Kia</span>
+        <span class="brand-badge">🇯🇵 Toyota</span>
+        <span class="brand-badge">🇯🇵 Nissan</span>
+        <span class="brand-badge">🇯🇵 Honda</span>
+        <span class="brand-badge">🇺🇸 Ford</span>
+        <span class="brand-badge">🇺🇸 Chevrolet</span>
+        <span class="brand-badge">🇬🇧 Jaguar</span>
+        <span class="brand-badge">🇸🇪 Volvo</span>
+        <span class="brand-badge">🇨🇳 BYD</span>
+        <span class="brand-badge">🇨🇳 NIO</span>
+    </div>
+</div>
+
+<!-- IoT Node Packs for Purchase -->
+<div class="iot-section">
+    <h2>💳
+        <span class="lang-el">Αγορά IoT Node Packs</span>
+        <span class="lang-en">Purchase IoT Node Packs</span>
+        <span class="lang-ja">IoTノードパックを購入</span>
+        <span class="lang-ru">Купить пакеты IoT узлов</span>
+        <span class="lang-es">Comprar Paquetes de Nodos IoT</span>
+    </h2>
+
+    <div class="packs-grid">
+        <!-- QUEST E: Starter Pack with Fixed Revolut Link -->
+        <div class="pack-card">
+            <div class="pack-icon">🚗</div>
+            <div class="pack-name">
+                <span class="lang-el">Starter</span>
+                <span class="lang-en">Starter</span>
+                <span class="lang-ja">スターター</span>
+                <span class="lang-ru">Начальный</span>
+                <span class="lang-es">Inicial</span>
+            </div>
+            <div class="pack-price">€49<small>/one-time</small></div>
+            <ul class="pack-features">
+                <li>
+                    <span class="lang-el">1 OBD-II Thronos Node</span>
+                    <span class="lang-en">1 OBD-II Thronos Node</span>
+                    <span class="lang-ja">1 OBD-II Thronos ノード</span>
+                    <span class="lang-ru">1 OBD-II Thronos узел</span>
+                    <span class="lang-es">1 Nodo Thronos OBD-II</span>
+                </li>
+                <li>
+                    <span class="lang-el">Βασικά τελεμετρικά δεδομένα</span>
+                    <span class="lang-en">Basic telemetry data</span>
+                    <span class="lang-ja">基本的なテレメトリデータ</span>
+                    <span class="lang-ru">Базовая телеметрия</span>
+                    <span class="lang-es">Datos de telemetría básicos</span>
+                </li>
+                <li>
+                    <span class="lang-el">Έως 100 THR/μήνα rewards</span>
+                    <span class="lang-en">Up to 100 THR/month rewards</span>
+                    <span class="lang-ja">最大 100 THR/月 報酬</span>
+                    <span class="lang-ru">До 100 THR/мес наград</span>
+                    <span class="lang-es">Hasta 100 THR/mes recompensas</span>
+                </li>
+                <li>
+                    <span class="lang-el">Πρόσβαση σε mobile app</span>
+                    <span class="lang-en">Mobile app access</span>
+                    <span class="lang-ja">モバイルアプリアクセス</span>
+                    <span class="lang-ru">Доступ к мобильному приложению</span>
+                    <span class="lang-es">Acceso a app móvil</span>
+                </li>
+                <li>
+                    <span class="lang-el">Email υποστήριξη</span>
+                    <span class="lang-en">Email support</span>
+                    <span class="lang-ja">メールサポート</span>
+                    <span class="lang-ru">Поддержка по email</span>
+                    <span class="lang-es">Soporte por email</span>
+                </li>
+            </ul>
+            <button class="pack-btn" onclick="window.open('https://checkout.revolut.com/pay/ce48ebea-de80-4955-8d98-d4219eb337a6', '_blank')">
+                <span class="lang-el">Αγορά τώρα</span>
+                <span class="lang-en">Purchase Now</span>
+                <span class="lang-ja">今すぐ購入</span>
+                <span class="lang-ru">Купить сейчас</span>
+                <span class="lang-es">Comprar Ahora</span>
+            </button>
+        </div>
+
+        <!-- QUEST E: Smart Home Bundle with Fixed Revolut Link -->
+        <div class="pack-card popular">
+            <div class="pack-icon">🏠</div>
+            <div class="pack-name">
+                <span class="lang-el">Smart Home Bundle</span>
+                <span class="lang-en">Smart Home Bundle</span>
+                <span class="lang-ja">スマートホームバンドル</span>
+                <span class="lang-ru">Комплект умного дома</span>
+                <span class="lang-es">Paquete Casa Inteligente</span>
+            </div>
+            <div class="pack-price">€149<small>/one-time</small></div>
+            <ul class="pack-features">
+                <li>
+                    <span class="lang-el">1 Thronos Gateway Hub</span>
+                    <span class="lang-en">1 Thronos Gateway Hub</span>
+                    <span class="lang-ja">1 Thronos ゲートウェイハブ</span>
+                    <span class="lang-ru">1 Thronos шлюз</span>
+                    <span class="lang-es">1 Thronos Gateway Hub</span>
+                </li>
+                <li>
+                    <span class="lang-el">3 Αισθητήρες περιβάλλοντος</span>
+                    <span class="lang-en">3 Environmental Sensors</span>
+                    <span class="lang-ja">3 環境センサー</span>
+                    <span class="lang-ru">3 экологических датчика</span>
+                    <span class="lang-es">3 Sensores ambientales</span>
+                </li>
+                <li>
+                    <span class="lang-el">1 Smart Meter Interface</span>
+                    <span class="lang-en">1 Smart Meter Interface</span>
+                    <span class="lang-ja">1 スマートメーターインターフェース</span>
+                    <span class="lang-ru">1 интерфейс умного счётчика</span>
+                    <span class="lang-es">1 Interfaz medidor inteligente</span>
+                </li>
+                <li>
+                    <span class="lang-el">Έως 500 THR/μήνα rewards</span>
+                    <span class="lang-en">Up to 500 THR/month rewards</span>
+                    <span class="lang-ja">最大 500 THR/月 報酬</span>
+                    <span class="lang-ru">До 500 THR/мес наград</span>
+                    <span class="lang-es">Hasta 500 THR/mes recompensas</span>
+                </li>
+                <li>
+                    <span class="lang-el">Προτεραιότητα υποστήριξης</span>
+                    <span class="lang-en">Priority support</span>
+                    <span class="lang-ja">優先サポート</span>
+                    <span class="lang-ru">Приоритетная поддержка</span>
+                    <span class="lang-es">Soporte prioritario</span>
+                </li>
+                <li>
+                    <span class="lang-el">Πρόσβαση σε Dashboard</span>
+                    <span class="lang-en">Dashboard access</span>
+                    <span class="lang-ja">ダッシュボードアクセス</span>
+                    <span class="lang-ru">Доступ к панели</span>
+                    <span class="lang-es">Acceso al panel</span>
+                </li>
+            </ul>
+            <button class="pack-btn" onclick="window.open('https://checkout.revolut.com/pay/96eb426f-b342-47c2-9724-a8d3b3f1a186', '_blank')">
+                <span class="lang-el">Αγορά τώρα</span>
+                <span class="lang-en">Purchase Now</span>
+                <span class="lang-ja">今すぐ購入</span>
+                <span class="lang-ru">Купить сейчас</span>
+                <span class="lang-es">Comprar Ahora</span>
+            </button>
+        </div>
+
+        <!-- QUEST E: Install Pro with Fixed Revolut Link -->
+        <div class="pack-card">
+            <div class="pack-icon">🔧</div>
+            <div class="pack-name">
+                <span class="lang-el">Install Pro</span>
+                <span class="lang-en">Install Pro</span>
+                <span class="lang-ja">インストールプロ</span>
+                <span class="lang-ru">Установка Про</span>
+                <span class="lang-es">Instalación Pro</span>
+            </div>
+            <div class="pack-price">€499<small>/one-time</small></div>
+            <ul class="pack-features">
+                <li>
+                    <span class="lang-el">1 Industrial Gateway</span>
+                    <span class="lang-en">1 Industrial Gateway</span>
+                    <span class="lang-ja">1 産業用ゲートウェイ</span>
+                    <span class="lang-ru">1 промышленный шлюз</span>
+                    <span class="lang-es">1 Gateway Industrial</span>
+                </li>
+                <li>
+                    <span class="lang-el">10 Sensor Nodes</span>
+                    <span class="lang-en">10 Sensor Nodes</span>
+                    <span class="lang-ja">10 センサーノード</span>
+                    <span class="lang-ru">10 узлов датчиков</span>
+                    <span class="lang-es">10 Nodos de Sensores</span>
+                </li>
+                <li>
+                    <span class="lang-el">PLC Integration Kit</span>
+                    <span class="lang-en">PLC Integration Kit</span>
+                    <span class="lang-ja">PLC統合キット</span>
+                    <span class="lang-ru">Комплект интеграции ПЛК</span>
+                    <span class="lang-es">Kit Integración PLC</span>
+                </li>
+                <li>
+                    <span class="lang-el">Έως 2000 THR/μήνα rewards</span>
+                    <span class="lang-en">Up to 2000 THR/month rewards</span>
+                    <span class="lang-ja">最大 2000 THR/月 報酬</span>
+                    <span class="lang-ru">До 2000 THR/мес наград</span>
+                    <span class="lang-es">Hasta 2000 THR/mes recompensas</span>
+                </li>
+                <li>
+                    <span class="lang-el">24/7 Προτεραιότητα υποστήριξης</span>
+                    <span class="lang-en">24/7 Priority support</span>
+                    <span class="lang-ja">24/7 優先サポート</span>
+                    <span class="lang-ru">24/7 приоритетная поддержка</span>
+                    <span class="lang-es">Soporte prioritario 24/7</span>
+                </li>
+                <li>
+                    <span class="lang-el">Εγκατάσταση στη τοποθεσία</span>
+                    <span class="lang-en">On-site installation</span>
+                    <span class="lang-ja">現地設置</span>
+                    <span class="lang-ru">Установка на месте</span>
+                    <span class="lang-es">Instalación en sitio</span>
+                </li>
+            </ul>
+            <button class="pack-btn" onclick="window.open('https://checkout.revolut.com/pay/ed0bba5d-ef91-4ecc-bb50-95169a93f0bb', '_blank')">
+                <span class="lang-el">Αγορά τώρα</span>
+                <span class="lang-en">Purchase Now</span>
+                <span class="lang-ja">今すぐ購入</span>
+                <span class="lang-ru">Купить сейчас</span>
+                <span class="lang-es">Comprar Ahora</span>
+            </button>
+        </div>
+
+        <div class="pack-card">
+            <div class="pack-icon">🏢</div>
+            <div class="pack-name">Enterprise Fleet</div>
+            <div class="pack-price">Custom</div>
+            <ul class="pack-features">
+                <li>Unlimited vehicle nodes</li>
+                <li>Custom integration</li>
+                <li>White-label solution</li>
+                <li>SLA guarantee</li>
+                <li>Dedicated account manager</li>
+                <li>API access</li>
+            </ul>
+            <button class="pack-btn enterprise" onclick="contactEnterprise()">
+                <span class="lang-el">Επικοινωνία</span>
+                <span class="lang-en">Contact Sales</span>
+                <span class="lang-ja">お問い合わせ</span>
+                <span class="lang-ru">Связаться</span>
+                <span class="lang-es">Contactar Ventas</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="stripe-secure">
+        <span>🔒
+            <span class="lang-el">Ασφαλείς πληρωμές με</span>
+            <span class="lang-en">Secure payments with</span>
+            <span class="lang-ja">安全な支払い</span>
+            <span class="lang-ru">Безопасные платежи</span>
+            <span class="lang-es">Pagos seguros con</span>
+        </span>
+        <strong style="color: #6366f1;">Stripe</strong>
+    </div>
+</div>
+
+<!-- Live Smart Parking Demo -->
+<div class="iot-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+        <h2 style="margin: 0;">🅿️
+            <span class="lang-el">Ζωντανή Επίδειξη Πάρκινγκ</span>
+            <span class="lang-en">Live Parking Demo</span>
+            <span class="lang-ja">ライブ駐車デモ</span>
+            <span class="lang-ru">Демо парковки</span>
+            <span class="lang-es">Demo de Estacionamiento</span>
+        </h2>
+        <button onclick="window.location.href='/parking'" style="padding: 10px 20px; background: linear-gradient(135deg, #00ff00 0%, #00ff66 100%); border: none; border-radius: 10px; color: #000; font-weight: bold; cursor: pointer; transition: all 0.3s;">
+            🗺️ <span class="lang-el">Άνοιγμα Πλήρους Χάρτη</span><span class="lang-en">Open Full Map</span>
+        </button>
+    </div>
+
+    <div style="margin: 15px 0; font-size: 0.9em;">
+        <span style="color:#0f0">■ <span class="lang-el">Ελεύθερο</span><span class="lang-en">Free</span></span> &nbsp;
+        <span style="color:#f00">■ <span class="lang-el">Κατειλημμένο</span><span class="lang-en">Occupied</span></span> &nbsp;
+        <span style="color:#ff0">■ <span class="lang-el">Κρατημένο</span><span class="lang-en">Reserved</span></span>
+    </div>
+
+    <div class="parking-grid" id="parkingGrid"></div>
+</div>
+
+<!-- Water Management Panel -->
+<div class="iot-section">
+    <div class="water-panel">
+        <h2 style="color: #0099ff; margin-bottom: 20px;">💧
+            <span class="lang-el">Διαχείριση Υδάτων</span>
+            <span class="lang-en">Water Management</span>
+            <span class="lang-ja">水管理</span>
+            <span class="lang-ru">Управление водой</span>
+            <span class="lang-es">Gestión del Agua</span>
+        </h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            <div>
+                <h4>Reservoir A (Main)</h4>
+                <div class="water-level"><div id="waterA" class="water-fill" style="width:75%">75%</div></div>
+                <p style="font-size: 0.8em; color: #888; margin-top: 8px;">Quality: Good (pH 7.2) | Temp: 18°C</p>
+            </div>
+            <div>
+                <h4>Reservoir B (Reserve)</h4>
+                <div class="water-level"><div id="waterB" class="water-fill" style="width:40%">40%</div></div>
+                <p style="font-size: 0.8em; color: #888; margin-top: 8px;">Quality: Excellent (pH 7.0) | Temp: 16°C</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Music/Telemetry Transmitter -->
+<div class="iot-section">
+    <h2>🎵
+        <span class="lang-el">Πομπός Μουσικής/Τηλεμετρίας</span>
+        <span class="lang-en">Music/Telemetry Transmitter</span>
+    </h2>
+    <p class="lang-el">Μετάδοση δεδομένων blockchain μέσω ήχου, ραδιοσημάτων και GPS τηλεμετρίας για vehicle nodes.</p>
+    <p class="lang-en">Transmit blockchain data via audio, radio signals, and GPS telemetry for vehicle nodes.</p>
+
+    <button class="pack-btn" onclick="openMusicTelemetryModal()" style="margin-top: 15px;">
+        📡 <span class="lang-el">Άνοιγμα Πομπού</span>
+        <span class="lang-en">Open Transmitter</span>
+    </button>
+</div>
+
+<!-- Language Toggle -->
+<button class="lang-toggle-iot" onclick="toggleLanguage()">🌐 GR</button>
+
+<!-- Reservation Modal -->
+<div id="reserveModal" class="modal">
+    <div class="modal-content">
+        <h3>🅿️
+            <span class="lang-el">Κράτηση Θέσης</span>
+            <span class="lang-en">Reserve Spot</span>
+        </h3>
+        <p id="modalSpotId" style="font-size: 1.5em; color: #00ff66;"></p>
+        <p>
+            <span class="lang-el">Κόστος:</span>
+            <span class="lang-en">Cost:</span>
+            <strong style="color: #ffd700;">5 THR</strong> / hour
+        </p>
+        <div id="modalMsg" style="margin: 15px 0; min-height: 20px;"></div>
+        <div style="display: flex; gap: 10px;">
+            <button class="pack-btn" onclick="confirmReservation()">
+                <span class="lang-el">Επιβεβαίωση</span>
+                <span class="lang-en">Confirm</span>
+            </button>
+            <button class="pack-btn" style="background: #333; color: #fff;" onclick="closeModal()">
+                <span class="lang-el">Ακύρωση</span>
+                <span class="lang-en">Cancel</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Music/Telemetry Modal -->
+<div id="musicTelemetryModal" class="modal">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;" onclick="event.stopPropagation()">
+        <h2>🎵
+            <span class="lang-el">Πομπός Μουσικής/Τηλεμετρίας</span>
+            <span class="lang-en">Music/Telemetry Transmitter</span>
+        </h2>
+
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchMusicTab('whisper')">
+                🎵 <span class="lang-el">WhisperNote</span><span class="lang-en">WhisperNote</span>
+            </button>
+            <button class="tab" onclick="switchMusicTab('radio')">
+                📻 <span class="lang-el">RadioNode</span><span class="lang-en">RadioNode</span>
+            </button>
+            <button class="tab" onclick="switchMusicTab('gps')">
+                📍 <span class="lang-el">GPS</span><span class="lang-en">GPS Setup</span>
+            </button>
+            <button class="tab" onclick="switchMusicTab('telemetry')">
+                📊 <span class="lang-el">Τηλεμετρία</span><span class="lang-en">Live Telemetry</span>
+            </button>
+        </div>
+
+        <!-- WhisperNote Tab -->
+        <div id="whisper-tab" class="tab-content active">
+            <h3><span class="lang-el">Κωδικοποίηση Ήχου Συναλλαγών</span><span class="lang-en">Audio Transaction Encoding</span></h3>
+            <p style="font-size:0.9em;color:#888;">
+                <span class="lang-el">Μετατροπή δεδομένων blockchain σε ηχητικούς τόνους</span>
+                <span class="lang-en">Convert blockchain data to audio tones</span>
+            </p>
+
+            <label style="display:block;margin-top:10px;"><span class="lang-el">Δεδομένα Συναλλαγής:</span><span class="lang-en">Transaction Data:</span></label>
+            <textarea id="whisper-data" placeholder='{"to":"THR123...","amount":10}' style="width:100%; height:100px; background:#000; border:1px solid #0f0; color:#0f0; padding:8px; font-family:monospace;"></textarea>
+
+            <label style="display:block; margin-top:10px;"><span class="lang-el">Συχνότητα Ήχου:</span><span class="lang-en">Audio Frequency:</span></label>
+            <select id="whisper-freq" style="width:100%; padding:8px; background:#000; border:1px solid #0f0; color:#0f0;">
+                <option value="1000">1kHz (Low)</option>
+                <option value="2000" selected>2kHz (Mid)</option>
+                <option value="4000">4kHz (High)</option>
+            </select>
+
+            <button class="pack-btn" onclick="generateWhisperNote()" style="margin-top:15px;">
+                🎵 <span class="lang-el">Δημιουργία Ήχου</span><span class="lang-en">Generate Audio</span>
+            </button>
+
+            <div id="whisper-player" style="display:none; margin-top:15px;">
+                <audio id="whisper-audio" controls style="width:100%;"></audio>
+                <button class="pack-btn" onclick="downloadWhisper()" style="margin-top:10px;">
+                    💾 <span class="lang-el">Λήψη WAV</span><span class="lang-en">Download WAV</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- RadioNode Tab -->
+        <div id="radio-tab" class="tab-content">
+            <h3><span class="lang-el">Μετάδοση Σήματος RF</span><span class="lang-en">RF Signal Transmission</span></h3>
+            <p style="font-size:0.9em;color:#888;">
+                <span class="lang-el">Κωδικοποίηση δεδομένων για ραδιοφωνική μετάδοση</span>
+                <span class="lang-en">Encode data for radio broadcast</span>
+            </p>
+
+            <label style="display:block;margin-top:10px;"><span class="lang-el">Φορτίο:</span><span class="lang-en">Payload:</span></label>
+            <textarea id="radio-payload" placeholder="Enter message..." style="width:100%; height:80px; background:#000; border:1px solid #0f0; color:#0f0; padding:8px;"></textarea>
+
+            <label style="display:block; margin-top:10px;"><span class="lang-el">Ζώνη Συχνότητας:</span><span class="lang-en">Frequency Band:</span></label>
+            <select id="radio-band" style="width:100%; padding:8px; background:#000; border:1px solid #0f0; color:#0f0;">
+                <option value="433">433 MHz (ISM)</option>
+                <option value="868">868 MHz (EU)</option>
+                <option value="915">915 MHz (US)</option>
+            </select>
+
+            <label style="display:block; margin-top:10px;"><span class="lang-el">Διαμόρφωση:</span><span class="lang-en">Modulation:</span></label>
+            <select id="radio-mod" style="width:100%; padding:8px; background:#000; border:1px solid #0f0; color:#0f0;">
+                <option value="FSK">FSK (Frequency Shift)</option>
+                <option value="OOK">OOK (On-Off Keying)</option>
+                <option value="LoRa">LoRa (Long Range)</option>
+            </select>
+
+            <button class="pack-btn" onclick="encodeRadioSignal()" style="margin-top:15px;">
+                📻 <span class="lang-el">Κωδικοποίηση Σήματος</span><span class="lang-en">Encode Signal</span>
+            </button>
+
+            <div id="radio-output" style="margin-top:15px; padding:10px; background:#001100; border:1px solid #0f0; font-family:monospace; font-size:0.8em; display:none;"></div>
+        </div>
+
+        <!-- GPS Setup Tab -->
+        <div id="gps-tab" class="tab-content">
+            <h3><span class="lang-el">Ρύθμιση Τηλεμετρίας GPS</span><span class="lang-en">GPS Telemetry Setup</span></h3>
+            <p style="font-size:0.9em;color:#888;">
+                <span class="lang-el">Διαμόρφωση υπηρεσιών τοποθεσίας κόμβου οχήματος</span>
+                <span class="lang-en">Configure vehicle node location services</span>
+            </p>
+
+            <div class="gps-status">
+                <div id="gps-indicator" class="status-indicator">
+                    <span class="pulse"></span>
+                    GPS: <span id="gps-status-text"><span class="lang-el">Μη Συνδεδεμένο</span><span class="lang-en">Not Connected</span></span>
+                </div>
+            </div>
+
+            <button class="pack-btn" onclick="requestGPSAccess()">
+                📍 <span class="lang-el">Ενεργοποίηση GPS</span><span class="lang-en">Enable GPS</span>
+            </button>
+
+            <div id="gps-data" style="display:none;">
+                <h4><span class="lang-el">Τρέχουσα Θέση</span><span class="lang-en">Current Position</span></h4>
+                <table class="telemetry-table">
+                    <tr><td><span class="lang-el">Γεωγρ. Πλάτος:</span><span class="lang-en">Latitude:</span></td><td id="gps-lat">-</td></tr>
+                    <tr><td><span class="lang-el">Γεωγρ. Μήκος:</span><span class="lang-en">Longitude:</span></td><td id="gps-lon">-</td></tr>
+                    <tr><td><span class="lang-el">Υψόμετρο:</span><span class="lang-en">Altitude:</span></td><td id="gps-alt">-</td></tr>
+                    <tr><td><span class="lang-el">Ταχύτητα:</span><span class="lang-en">Speed:</span></td><td id="gps-speed">-</td></tr>
+                    <tr><td><span class="lang-el">Κατεύθυνση:</span><span class="lang-en">Heading:</span></td><td id="gps-heading">-</td></tr>
+                    <tr><td><span class="lang-el">Ακρίβεια:</span><span class="lang-en">Accuracy:</span></td><td id="gps-accuracy">-</td></tr>
+                </table>
+
+                <div class="gps-map" id="gps-map">
+                    <span style="color:#666;">📍 Map View (Lat: <span id="map-lat">-</span>, Lon: <span id="map-lon">-</span>)</span>
+                </div>
+
+                <button class="pack-btn" onclick="transmitGPSData()">
+                    📡 <span class="lang-el">Μετάδοση Θέσης</span><span class="lang-en">Transmit Position</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Live Telemetry Tab -->
+        <div id="telemetry-tab" class="tab-content">
+            <h3><span class="lang-el">Τηλεμετρία Οχήματος Πραγματικού Χρόνου</span><span class="lang-en">Live Vehicle Telemetry</span></h3>
+            <p style="font-size:0.9em;color:#888;">
+                <span class="lang-el">Ροή δεδομένων αισθητήρα σε πραγματικό χρόνο</span>
+                <span class="lang-en">Real-time sensor data streaming</span>
+            </p>
+
+            <div class="telemetry-grid">
+                <div class="sensor-card">
+                    <h4><span class="lang-el">Ταχύτητα</span><span class="lang-en">Speed</span></h4>
+                    <div class="sensor-value" id="telem-speed">0 km/h</div>
+                </div>
+
+                <div class="sensor-card">
+                    <h4><span class="lang-el">Μπαταρία</span><span class="lang-en">Battery</span></h4>
+                    <div class="sensor-value" id="telem-battery">100%</div>
+                    <div class="battery-bar">
+                        <div id="battery-fill" style="width:100%"></div>
+                    </div>
+                </div>
+
+                <div class="sensor-card">
+                    <h4><span class="lang-el">Lidar (Μπροστά)</span><span class="lang-en">Lidar (Front)</span></h4>
+                    <div class="sensor-value" id="telem-lidar">- m</div>
+                </div>
+
+                <div class="sensor-card">
+                    <h4><span class="lang-el">Απόκλιση Λωρίδας</span><span class="lang-en">Lane Deviation</span></h4>
+                    <div class="sensor-value" id="telem-lane">0.0 m</div>
+                </div>
+
+                <div class="sensor-card">
+                    <h4><span class="lang-el">AI Αυτόματος Πιλότος</span><span class="lang-en">AI Autopilot</span></h4>
+                    <div class="sensor-value" id="telem-mode"><span class="lang-el">ΧΕΙΡΟΚΙΝΗΤΟ</span><span class="lang-en">MANUAL</span></div>
+                    <button class="pack-btn" onclick="requestAutopilot()" style="font-size:0.9em;padding:10px;">
+                        🤖 <span class="lang-el">Ενεργοποίηση AI</span><span class="lang-en">Activate AI</span>
+                    </button>
+                </div>
+
+                <div class="sensor-card">
+                    <h4><span class="lang-el">Εγρήγορση Οδηγού</span><span class="lang-en">Driver Alertness</span></h4>
+                    <div class="sensor-value" id="telem-alert"><span class="lang-el">ΥΨΗΛΗ</span><span class="lang-en">HIGH</span></div>
+                </div>
+            </div>
+
+            <button class="pack-btn" onclick="toggleTelemetryStream()" id="telem-toggle" style="margin-top:15px;">
+                ▶️ <span class="lang-el">Έναρξη Ροής</span><span class="lang-en">Start Streaming</span>
+            </button>
+        </div>
+
+        <div style="margin-top:20px; text-align:right;">
+            <button class="pack-btn" style="background:#333; color:#fff;" onclick="closeMusicTelemetryModal()">
+                <span class="lang-el">Κλείσιμο</span><span class="lang-en">Close</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = (id) => document.getElementById(id);
+
+// Language (data-i18n with safe fallback)
+const LANG_SEQUENCE = ['gr', 'en', 'ja', 'es', 'ru'];
+const LANG_ALIAS = { el: 'gr' };
+window.DEFAULT_LANG = window.DEFAULT_LANG || 'el';
+const DEFAULT_LANG_IOT = window.DEFAULT_LANG;
+let TRANSLATIONS_CACHE = null;
+
+function normalizeLang(lang) {
+    if (!lang) return DEFAULT_LANG_IOT;
+    const alias = LANG_ALIAS[lang];
+    const normalized = alias || lang;
+    return LANG_SEQUENCE.includes(normalized) ? normalized : DEFAULT_LANG_IOT;
+}
+
+function harvestTranslations() {
+    const store = {};
+    const langRegex = /lang-([a-z]+)/;
+    document.querySelectorAll('.lang-el, .lang-en, .lang-ja, .lang-ru, .lang-es').forEach((node) => {
+        const parent = node.parentElement;
+        if (!parent) return;
+        if (!parent.dataset.i18n) {
+            parent.dataset.i18n = `auto-i18n-${Object.keys(store).length}`;
+        }
+        const key = parent.dataset.i18n;
+        const match = node.className.match(langRegex);
+        const lang = normalizeLang(match && match[1]);
+        store[key] = store[key] || {};
+        store[key][lang] = node.textContent.trim();
+    });
+    document.querySelectorAll('[data-i18n]').forEach((node) => {
+        const key = node.dataset.i18n;
+        store[key] = store[key] || {};
+        const fallback = node.dataset.i18nDefault || node.textContent.trim();
+        if (!store[key][DEFAULT_LANG_IOT]) {
+            store[key][DEFAULT_LANG_IOT] = fallback;
+        }
+    });
+    return store;
+}
+
+function applyTranslations(langOverride) {
+    const lang = normalizeLang(langOverride || localStorage.getItem('lang'));
+    localStorage.setItem('lang', lang);
+    document.documentElement.lang = lang;
+
+    if (!TRANSLATIONS_CACHE) {
+        TRANSLATIONS_CACHE = harvestTranslations();
+    }
+
+    try {
+        document.querySelectorAll('[data-i18n]').forEach((node) => {
+            const key = node.dataset.i18n;
+            const table = TRANSLATIONS_CACHE[key] || {};
+            const fallback = table[DEFAULT_LANG_IOT] || node.dataset.i18nDefault || node.textContent;
+            const value = table[lang] || fallback || key;
+            if (node.dataset.i18nAttr === 'placeholder') {
+                node.placeholder = value;
+            } else {
+                node.textContent = value;
+            }
+        });
+    } catch (err) {
+        console.warn('translation apply failed', err);
+        document.querySelectorAll('[data-i18n]').forEach((node) => {
+            const fallback = node.dataset.i18nDefault || node.textContent;
+            if (node.dataset.i18nAttr === 'placeholder') {
+                node.placeholder = fallback;
+            } else {
+                node.textContent = fallback;
+            }
+        });
+    }
+
+    const btn = document.querySelector('.lang-toggle-iot');
+    if (btn) btn.textContent = '🌐 ' + lang.toUpperCase();
+}
+
+function toggleLanguage() {
+    const current = normalizeLang(localStorage.getItem('lang'));
+    const idx = LANG_SEQUENCE.indexOf(current);
+    const next = LANG_SEQUENCE[(idx + 1) % LANG_SEQUENCE.length];
+    applyTranslations(next);
+}
+
+// Stripe Purchase
+window.purchasePack = async function purchasePack(packId, price) {
+    const wallet = localStorage.getItem('thr_address');
+    if (!wallet) {
+        alert('Please connect your wallet first!');
+        window.location.href = '/';
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/stripe/create-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                pack_id: packId,
+                price_cents: price * 100,
+                wallet: wallet
+            })
+        });
+        const data = await res.json();
+
+        if (data.url) {
+            window.location.href = data.url;
+        } else {
+            alert(data.error || 'Failed to create checkout session');
+        }
+    } catch (e) {
+        console.error('Purchase error:', e);
+        alert('Payment service unavailable. Please try again later.');
+    }
+}
+
+function contactEnterprise() {
+    window.location.href = 'mailto:enterprise@thronos.io?subject=Enterprise Fleet Inquiry';
+}
+
+// Parking Demo
+const SPOTS = Array.from({length: 12}, (_, i) => ({
+    id: `P-${101+i}`,
+    status: Math.random() > 0.65 ? 'occupied' : 'free'
+}));
+
+let selectedSpot = null;
+
+function renderParking() {
+    const grid = $('parkingGrid');
+    grid.innerHTML = '';
+
+    SPOTS.forEach(spot => {
+        const div = document.createElement('div');
+        div.className = `spot ${spot.status}`;
+        div.innerHTML = `
+            <div class="spot-id">${spot.id}</div>
+            <div class="spot-status">${spot.status.toUpperCase()}</div>
+        `;
+
+        if (spot.status === 'free') {
+            div.onclick = () => openReserveModal(spot);
+        }
+
+        grid.appendChild(div);
+    });
+}
+
+function openReserveModal(spot) {
+    const wallet = localStorage.getItem('thr_address');
+    if (!wallet) {
+        alert("Please connect your wallet first!");
+        return;
+    }
+    selectedSpot = spot;
+    $('modalSpotId').textContent = spot.id;
+    $('modalMsg').textContent = '';
+    $('reserveModal').style.display = 'flex';
+}
+
+function closeModal() {
+    $('reserveModal').style.display = 'none';
+    selectedSpot = null;
+}
+
+async function confirmReservation() {
+    const wallet = localStorage.getItem('thr_address');
+    if (!wallet || !selectedSpot) return;
+
+    $('modalMsg').style.color = '#ff0';
+    $('modalMsg').textContent = 'Processing...';
+
+    // Simulate reservation
+    setTimeout(() => {
+        const spotIdx = SPOTS.findIndex(s => s.id === selectedSpot.id);
+        if (spotIdx >= 0) {
+            SPOTS[spotIdx].status = 'reserved';
+        }
+        $('modalMsg').style.color = '#0f0';
+        $('modalMsg').textContent = '✅ Reserved!';
+        renderParking();
+        setTimeout(closeModal, 1500);
+    }, 1000);
+}
+
+// Water Simulation
+function updateWater() {
+    const lvlA = 70 + Math.random() * 10;
+    const lvlB = 35 + Math.random() * 10;
+    $('waterA').style.width = lvlA + '%';
+    $('waterA').textContent = Math.round(lvlA) + '%';
+    $('waterB').style.width = lvlB + '%';
+    $('waterB').textContent = Math.round(lvlB) + '%';
+}
+
+// Init
+let waterInterval = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    applyTranslations();
+    renderParking();
+    applyTranslations();
+    updateWater();
+    if (waterInterval) {
+        clearInterval(waterInterval);
+    }
+    waterInterval = setInterval(updateWater, 5000);
+});
+
+// --- Music/Telemetry Modal Functions ---
+
+function openMusicTelemetryModal() {
+    $('musicTelemetryModal').style.display = 'flex';
+}
+
+function closeMusicTelemetryModal() {
+    $('musicTelemetryModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+if ($('musicTelemetryModal')) {
+    $('musicTelemetryModal').onclick = function(e) {
+        if (e.target === this) {
+            closeMusicTelemetryModal();
+        }
+    };
+}
+
+function switchMusicTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('#musicTelemetryModal .tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('#musicTelemetryModal .tab').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected tab
+    $(`${tabName}-tab`).classList.add('active');
+    event.target.classList.add('active');
+}
+
+// --- WhisperNote Functions ---
+
+async function generateWhisperNote() {
+    const data = $('whisper-data').value;
+    const freq = parseInt($('whisper-freq').value);
+
+    if (!data) {
+        alert('Enter transaction data first');
+        return;
+    }
+
+    try {
+        const txData = JSON.parse(data);
+
+        // Convert JSON to binary
+        const binary = jsonToBinary(txData);
+
+        // Generate audio tones
+        const audioBuffer = await generateAudioFromBinary(binary, freq);
+
+        // Create audio element
+        const audioBlob = bufferToWav(audioBuffer);
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        const player = $('whisper-audio');
+        player.src = audioUrl;
+
+        $('whisper-player').style.display = 'block';
+
+        // Store for download
+        window.whisperBlob = audioBlob;
+
+    } catch (e) {
+        alert('Error encoding audio: ' + e.message);
+    }
+}
+
+function jsonToBinary(data) {
+    const json = JSON.stringify(data);
+    return json.split('').map(c =>
+        c.charCodeAt(0).toString(2).padStart(8, '0')
+    ).join('');
+}
+
+async function generateAudioFromBinary(binary, baseFreq) {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const sampleRate = 44100;
+    const bitDuration = 0.1; // 100ms per bit
+    const totalSamples = Math.ceil(binary.length * bitDuration * sampleRate);
+
+    const audioBuffer = audioContext.createBuffer(1, totalSamples, sampleRate);
+    const channelData = audioBuffer.getChannelData(0);
+
+    let sampleIndex = 0;
+
+    for (let i = 0; i < binary.length; i++) {
+        const bit = binary[i];
+        // '1' = high freq, '0' = low freq
+        const freq = bit === '1' ? baseFreq : baseFreq / 2;
+        const samplesPerBit = Math.floor(bitDuration * sampleRate);
+
+        for (let j = 0; j < samplesPerBit; j++) {
+            const t = sampleIndex / sampleRate;
+            channelData[sampleIndex] = Math.sin(2 * Math.PI * freq * t) * 0.5;
+            sampleIndex++;
+        }
+    }
+
+    return audioBuffer;
+}
+
+function bufferToWav(audioBuffer) {
+    const numChannels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
+
+    const bytesPerSample = bitDepth / 8;
+    const blockAlign = numChannels * bytesPerSample;
+
+    const data = audioBuffer.getChannelData(0);
+    const dataLength = data.length * bytesPerSample;
+    const buffer = new ArrayBuffer(44 + dataLength);
+    const view = new DataView(buffer);
+
+    // WAV header
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataLength, true);
+    writeString(view, 8, 'WAVE');
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, format, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitDepth, true);
+    writeString(view, 36, 'data');
+    view.setUint32(40, dataLength, true);
+
+    // PCM samples
+    let offset = 44;
+    for (let i = 0; i < data.length; i++) {
+        const sample = Math.max(-1, Math.min(1, data[i]));
+        view.setInt16(offset, sample * 0x7FFF, true);
+        offset += 2;
+    }
+
+    return new Blob([buffer], { type: 'audio/wav' });
+}
+
+function writeString(view, offset, string) {
+    for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+    }
+}
+
+function downloadWhisper() {
+    if (!window.whisperBlob) return;
+
+    const url = URL.createObjectURL(window.whisperBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `whisper_tx_${Date.now()}.wav`;
+    a.click();
+}
+
+// --- RadioNode Functions ---
+
+function encodeRadioSignal() {
+    const payload = $('radio-payload').value;
+    const band = $('radio-band').value;
+    const mod = $('radio-mod').value;
+
+    if (!payload) {
+        alert('Enter payload first');
+        return;
+    }
+
+    // Convert payload to binary
+    const binary = payload.split('').map(c =>
+        c.charCodeAt(0).toString(2).padStart(8, '0')
+    ).join('');
+
+    const output = $('radio-output');
+    output.style.display = 'block';
+    output.innerHTML = `
+        <strong>RF Signal Encoded</strong><br>
+        Frequency: ${band} MHz<br>
+        Modulation: ${mod}<br>
+        Payload Length: ${payload.length} bytes<br>
+        Binary Length: ${binary.length} bits<br>
+        <br>
+        <strong>Binary Output:</strong><br>
+        <div style="word-break:break-all; max-height:100px; overflow-y:auto;">
+            ${binary.substring(0, 256)}${binary.length > 256 ? '...' : ''}
+        </div>
+        <br>
+        <em>⚠️ This is a simulation. Actual RF transmission requires hardware.</em>
+    `;
+}
+
+// --- GPS Functions ---
+
+let gpsWatchId = null;
+
+function requestGPSAccess() {
+    if (!navigator.geolocation) {
+        alert('GPS not supported by this browser');
+        return;
+    }
+
+    $('gps-status-text').innerHTML = '<span class="lang-el">Αίτημα...</span><span class="lang-en">Requesting...</span>';
+
+    navigator.geolocation.getCurrentPosition(
+        position => {
+            // Success
+            $('gps-indicator').classList.add('online');
+            $('gps-status-text').innerHTML = '<span class="lang-el">Συνδεδεμένο</span><span class="lang-en">Connected</span>';
+            $('gps-data').style.display = 'block';
+
+            updateGPSDisplay(position);
+
+            // Start watching position
+            gpsWatchId = navigator.geolocation.watchPosition(
+                updateGPSDisplay,
+                handleGPSError,
+                { enableHighAccuracy: true, maximumAge: 10000 }
+            );
+
+            applyTranslations();
+        },
+        handleGPSError
+    );
+}
+
+function handleGPSError(error) {
+    $('gps-status-text').textContent = `Error: ${error.message}`;
+    $('gps-indicator').classList.remove('online');
+}
+
+function updateGPSDisplay(position) {
+    const { latitude, longitude, altitude, speed, heading, accuracy } = position.coords;
+
+    $('gps-lat').textContent = latitude.toFixed(6);
+    $('gps-lon').textContent = longitude.toFixed(6);
+    $('gps-alt').textContent = altitude ? `${altitude.toFixed(1)} m` : 'N/A';
+    $('gps-speed').textContent = speed ? `${(speed * 3.6).toFixed(1)} km/h` : 'N/A';
+    $('gps-heading').textContent = heading ? `${heading.toFixed(0)}°` : 'N/A';
+    $('gps-accuracy').textContent = `${accuracy.toFixed(1)} m`;
+
+    $('map-lat').textContent = latitude.toFixed(4);
+    $('map-lon').textContent = longitude.toFixed(4);
+}
+
+async function transmitGPSData() {
+    const lat = $('gps-lat').textContent;
+    const lon = $('gps-lon').textContent;
+
+    if (lat === '-' || lon === '-') {
+        alert('GPS data not available');
+        return;
+    }
+
+    const wallet = localStorage.getItem('thr_address');
+    if (!wallet) {
+        alert('Connect wallet first');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/iot/gps', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                address: wallet,
+                latitude: parseFloat(lat),
+                longitude: parseFloat(lon),
+                altitude: $('gps-alt').textContent,
+                speed: $('gps-speed').textContent,
+                heading: $('gps-heading').textContent,
+                timestamp: new Date().toISOString()
+            })
+        });
+
+        const data = await res.json();
+        if (data.ok) {
+            alert('✅ GPS data transmitted successfully!');
+        } else {
+            alert('❌ Error: ' + (data.error || 'Unknown error'));
+        }
+    } catch (e) {
+        alert('❌ Transmission failed: ' + e.message);
+    }
+}
+
+// --- Telemetry Functions ---
+
+let telemetryInterval = null;
+
+function toggleTelemetryStream() {
+    const btn = $('telem-toggle');
+
+    if (telemetryInterval) {
+        // Stop streaming
+        clearInterval(telemetryInterval);
+        telemetryInterval = null;
+        btn.innerHTML = '▶️ <span class="lang-el">Έναρξη Ροής</span><span class="lang-en">Start Streaming</span>';
+    } else {
+        // Start streaming
+        btn.innerHTML = '⏸️ <span class="lang-el">Παύση Ροής</span><span class="lang-en">Stop Streaming</span>';
+        simulateTelemetry();
+        // Memory optimization: reduce telemetry frequency from 1s to 5s
+        telemetryInterval = setInterval(simulateTelemetry, 5000);
+    }
+    applyTranslations();
+}
+
+function simulateTelemetry() {
+    // Simulate sensor data (in real app, this would come from actual sensors)
+    const speed = Math.floor(Math.random() * 120);
+    const battery = Math.max(20, 100 - (Date.now() % 100000) / 1000);
+    const lidar = (Math.random() * 50 + 5).toFixed(1);
+    const lane = (Math.random() * 0.5 - 0.25).toFixed(2);
+
+    $('telem-speed').textContent = `${speed} km/h`;
+    $('telem-battery').textContent = `${Math.round(battery)}%`;
+    $('battery-fill').style.width = `${battery}%`;
+    $('telem-lidar').textContent = `${lidar} m`;
+    $('telem-lane').textContent = `${lane} m`;
+}
+
+function requestAutopilot() {
+    const current = $('telem-mode').textContent;
+    if (current.includes('MANUAL') || current.includes('ΧΕΙΡΟΚΙΝΗΤΟ')) {
+        if (confirm('Activate AI Autopilot? Ensure conditions are safe.')) {
+            $('telem-mode').innerHTML = '<span class="lang-el">AI ΑΥΤΟΜΑΤΟΣ ΠΙΛΟΤΟΣ</span><span class="lang-en">AI AUTOPILOT</span>';
+            $('telem-mode').style.color = '#0f0';
+            applyTranslations();
+        }
+    } else {
+        $('telem-mode').innerHTML = '<span class="lang-el">ΧΕΙΡΟΚΙΝΗΤΟ</span><span class="lang-en">MANUAL</span>';
+        $('telem-mode').style.color = '#0ff';
+        applyTranslations();
+    }
+}
+
+window.addEventListener('beforeunload', () => {
+    if (waterInterval) {
+        clearInterval(waterInterval);
+        waterInterval = null;
+    }
+    if (telemetryInterval) {
+        clearInterval(telemetryInterval);
+        telemetryInterval = null;
+    }
+});
+</script>
+{% endblock %}

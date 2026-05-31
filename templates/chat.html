@@ -1,0 +1,2707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Thronos Quantum Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="{{ url_for('static', filename='wallet_session.js') }}?v={{ build_id }}"></script>
+  <style>
+    :root {
+      --bg: #020712;
+      --bg-alt: #050b18;
+      --panel: #050f1f;
+      --panel-alt: #071628;
+      --accent: #23ff6b;
+      --accent-soft: rgba(35, 255, 107, 0.15);
+      --accent-soft-2: rgba(35, 255, 107, 0.05);
+      --danger: #ff4b81;
+      --text: #e6fff4;
+      --muted: #7aa398;
+      --border: #102338;
+      --border-soft: rgba(16, 35, 56, 0.7);
+      --shadow-soft: 0 0 40px rgba(0, 0, 0, 0.7);
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --transition-fast: 150ms ease-out;
+      --transition-med: 220ms ease-out;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+        Consolas, "Liberation Mono", "Courier New", monospace;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-sans);
+      background: radial-gradient(circle at top, #07162a 0, #020712 55%, #000 100%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      padding: 18px;
+    }
+
+    .quantum-shell {
+      width: 100%;
+      max-width: 1600px;  /* Increased from 1360px for better full screen use */
+      height: 100vh;
+      max-height: calc(100vh - 36px);  /* Use full viewport height minus padding */
+      background: radial-gradient(circle at top left, #08162a 0, #020712 55%);
+      border-radius: 26px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .quantum-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background: radial-gradient(
+          circle at 10% 0,
+          rgba(35, 255, 107, 0.1),
+          transparent 55%
+        ),
+        radial-gradient(
+          circle at 90% 0,
+          rgba(0, 255, 255, 0.08),
+          transparent 60%
+        );
+      mix-blend-mode: screen;
+      opacity: 0.6;
+    }
+
+    .q-header {
+      position: relative;
+      z-index: 1;
+      padding: 14px 20px 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-soft);
+      background: linear-gradient(
+        135deg,
+        rgba(3, 13, 30, 0.98),
+        rgba(3, 11, 25, 0.95)
+      );
+      backdrop-filter: blur(12px);
+    }
+
+    .q-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .th-chip {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 8px rgba(35, 255, 107, 0.9);
+      box-shadow: 0 0 18px rgba(35, 255, 107, 0.4);
+    }
+
+    .q-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .q-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .q-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .q-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(4, 18, 32, 0.85);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .pill-label {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .pill-value {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .pill-quiet .pill-dot {
+      background: #7aa398;
+      box-shadow: none;
+    }
+
+    .pill-danger .pill-dot {
+      background: var(--danger);
+      box-shadow: 0 0 10px var(--danger);
+    }
+
+    .pill-success .pill-dot {
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .q-main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1.5fr) 260px;
+      grid-template-rows: minmax(0, 1fr);  /* ADDED - constrains row height to prevent overflow */
+      gap: 12px;
+      padding: 12px 16px 14px 16px;
+      min-height: 0;  /* ADDED - allows grid to shrink properly */
+    }
+
+    /* Left column (sessions) */
+
+    .panel {
+      border-radius: var(--radius-lg);
+      background: radial-gradient(circle at top, #061426 0, #050b18 55%);
+      border: 1px solid var(--border);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-ghost {
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(3, 13, 30, 0.7);
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: border-color var(--transition-fast),
+        background var(--transition-fast), color var(--transition-fast),
+        transform var(--transition-fast);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--accent);
+      background: rgba(9, 32, 50, 0.9);
+      color: var(--accent);
+      transform: translateY(-0.5px);
+    }
+
+    .btn-ghost-danger:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .sessions-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+      flex: 1;
+      font-size: 12px;
+    }
+
+    .session-item {
+      border-radius: var(--radius-md);
+      padding: 7px 9px;
+      border: 1px solid rgba(16, 35, 56, 0.9);
+      background: linear-gradient(
+        135deg,
+        rgba(5, 17, 32, 0.95),
+        rgba(4, 13, 26, 0.96)
+      );
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      position: relative;
+      transition: border-color var(--transition-fast),
+        background var(--transition-fast), transform var(--transition-fast),
+        box-shadow var(--transition-fast);
+    }
+
+    .session-item:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(35, 255, 107, 0.15);
+      transform: translateY(-0.5px);
+    }
+
+    .session-item.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(35, 255, 107, 0.2);
+      background: radial-gradient(circle at top left, #071f35 0, #040d1b 55%);
+    }
+
+    .session-name-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .session-name {
+      font-size: 12px;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    .session-delete-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 4px;
+      opacity: 0;
+      transition: opacity 0.2s, color 0.2s;
+    }
+
+    .session-item:hover .session-delete-btn {
+      opacity: 1;
+    }
+
+    .session-delete-btn:hover {
+      color: #ff4444;
+    }
+
+    .session-meta {
+      font-size: 10px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .session-status-pill {
+      padding: 1px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(64, 96, 112, 0.9);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .session-status-pill.chat {
+      border-color: rgba(0, 200, 255, 0.4);
+      color: #9ed8ff;
+    }
+
+    .session-status-pill.architect {
+      border-color: rgba(255, 180, 90, 0.4);
+      color: #ffd7a0;
+    }
+
+    .session-hint {
+      margin: 6px 0 4px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .session-status-pill span {
+      color: var(--accent);
+    }
+
+    /* Center column (chat) */
+
+    .chat-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at top, #07182e 0, #040b17 55%);
+      padding: 8px 10px;
+      position: relative;
+      overflow: hidden;  /* CHANGED from visible - prevents content overflow */
+      min-height: 0;
+    }
+
+    .chat-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(
+          to bottom,
+          rgba(35, 255, 107, 0.04),
+          transparent 30%
+        ),
+        linear-gradient(to right, rgba(0, 255, 255, 0.04), transparent 35%);
+      opacity: 0.9;
+    }
+
+    .chat-panel-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      gap: 8px;
+    }
+
+    .chat-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 2px 4px 4px;
+    }
+
+    .chat-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    #sessionTitle {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    #sessionStatusTag {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .chat-badges-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(6, 18, 32, 0.9);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 0;
+      padding: 6px 4px 8px 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(12, 30, 51, 0.9);
+      background: radial-gradient(circle at top, #050f1f 0, #040a16 55%);
+      font-size: 13px;
+      scroll-behavior: smooth;
+    }
+
+    .msg-row {
+      display: flex;
+      margin-bottom: 14px;
+      gap: 8px;
+    }
+
+    .msg-row.user {
+      justify-content: flex-end;
+    }
+
+    .msg-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--muted);
+      flex-shrink: 0;
+      background: rgba(3, 12, 26, 0.96);
+    }
+
+    .msg-bubble {
+      max-width: 100%;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(20, 50, 80, 0.9);
+      background: rgba(5, 16, 32, 0.98);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+
+    .msg-row.user .msg-bubble {
+      border-color: rgba(35, 255, 107, 0.7);
+      background: rgba(7, 26, 40, 0.98);
+    }
+
+    .msg-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .msg-author {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 500;
+    }
+
+    .msg-model-tag {
+      font-size: 10px;
+      color: #a6e2ff;
+    }
+
+    .msg-content {
+      white-space: normal;
+      word-wrap: break-word;
+      font-size: 13px;
+      line-height: 1.7;
+      padding: 2px 0;
+      margin: 0;
+      letter-spacing: 0.3px;
+      word-spacing: 1px;
+    }
+
+    .msg-content p {
+      margin: 0.6em 0;
+      line-height: 1.7;
+    }
+
+    .msg-content p:first-child {
+      margin-top: 0;
+    }
+
+    .msg-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    .msg-content strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .msg-content em {
+      color: #b8d4ff;
+      font-style: italic;
+    }
+
+    .msg-content code {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      color: #7fd7ff;
+    }
+
+    .msg-content ul, .msg-content ol {
+      margin: 0.6em 0;
+      padding-left: 1.5em;
+      line-height: 1.7;
+    }
+
+    .msg-content li {
+      margin: 0.3em 0;
+      line-height: 1.6;
+    }
+
+    .msg-content h1, .msg-content h2, .msg-content h3,
+    .msg-content h4, .msg-content h5, .msg-content h6 {
+      margin: 0.8em 0 0.5em 0;
+      color: var(--accent);
+      font-weight: 700;
+      line-height: 1.4;
+      letter-spacing: 0.05em;
+    }
+
+    .msg-content h1 { font-size: 1.3em; }
+    .msg-content h2 { font-size: 1.2em; }
+    .msg-content h3 { font-size: 1.1em; }
+    .msg-content h4, .msg-content h5, .msg-content h6 { font-size: 1em; }
+
+    .msg-files {
+      margin-top: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .msg-file-link {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(74, 119, 128, 0.9);
+      background: rgba(5, 20, 30, 0.96);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .msg-actions {
+      margin-top: 4px;
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .thumb-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(50, 80, 100, 0.9);
+      background: rgba(4, 15, 26, 0.96);
+      color: var(--muted);
+      font-size: 11px;
+      padding: 2px 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: border-color var(--transition-fast),
+        background var(--transition-fast), color var(--transition-fast),
+        transform var(--transition-fast);
+    }
+
+    .thumb-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-0.5px);
+    }
+
+    .thumb-btn.down:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .thumb-btn.active {
+      border-color: var(--accent);
+      background: rgba(35, 255, 107, 0.09);
+      color: var(--accent);
+    }
+
+    .thumb-btn.down.active {
+      border-color: var(--danger);
+      background: rgba(255, 75, 129, 0.08);
+      color: var(--danger);
+    }
+
+    .chat-input-block {
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(16, 35, 56, 0.9);
+      background: radial-gradient(circle at top, #050f22 0, #030917 55%);
+      padding: 8px 9px 8px 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .wallet-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    #walletInput {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 5px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(40, 72, 96, 0.9);
+      background: rgba(2, 9, 18, 0.96);
+      color: var(--text);
+    }
+
+    #walletInput:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(35, 255, 107, 0.2);
+    }
+
+    .wallet-label {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .input-row-main {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    #messageInput {
+      flex: 1;
+      min-height: 40px;
+      max-height: 80px;
+      resize: vertical;
+      border-radius: 12px;
+      border: 1px solid rgba(40, 72, 96, 0.9);
+      background: rgba(3, 10, 20, 0.96);
+      color: var(--text);
+      padding: 6px 8px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+    }
+
+    #messageInput:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(35, 255, 107, 0.2);
+    }
+
+    .input-side {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      align-items: flex-end;
+    }
+
+    .attach-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .attach-btn {
+      border-radius: 999px;
+      border: 1px dashed rgba(60, 92, 116, 0.9);
+      background: rgba(5, 14, 26, 0.96);
+      color: var(--muted);
+      padding: 3px 7px;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: border-color var(--transition-fast),
+        color var(--transition-fast), background var(--transition-fast);
+    }
+
+    .attach-btn:hover {
+      border-style: solid;
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(7, 22, 36, 0.96);
+    }
+
+    .model-select {
+      font-size: 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(60, 92, 116, 0.9);
+      background: rgba(5, 14, 26, 0.96);
+      color: var(--text);
+      padding: 3px 6px;
+    }
+
+    .send-btn {
+      margin-top: 2px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: radial-gradient(circle at 30% 0, #22ff6a 0, #059448 55%, #02361b 100%);
+      color: #021108;
+      font-weight: 600;
+      font-size: 12px;
+      padding: 5px 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 0 20px rgba(35, 255, 107, 0.18);
+      transition: transform var(--transition-med), box-shadow var(--transition-med),
+        filter var(--transition-med), opacity var(--transition-med);
+    }
+
+    .send-btn[disabled] {
+      opacity: 0.45;
+      cursor: default;
+      filter: grayscale(0.2);
+      box-shadow: none;
+    }
+
+    .send-btn:not([disabled]):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 28px rgba(35, 255, 107, 0.3);
+      filter: brightness(1.06);
+    }
+
+    #pendingFilesRow {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pending-files-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .pending-file-chip {
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(70, 110, 126, 0.9);
+      background: rgba(4, 14, 24, 0.96);
+      font-size: 10px;
+    }
+
+    .pending-file-chip span {
+      color: var(--accent);
+    }
+
+    .remove-link {
+      cursor: pointer;
+      text-decoration: underline;
+      color: var(--muted);
+    }
+
+    .remove-link:hover {
+      color: var(--danger);
+    }
+
+    #uploadStatus,
+    #usageStatus {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    #uploadStatus.ok {
+      color: var(--accent);
+    }
+
+    #uploadStatus.error {
+      color: var(--danger);
+    }
+
+    /* Right column (telemetry) */
+
+    .telemetry-kv {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 4px 6px;
+      border-radius: var(--radius-md);
+      background: rgba(4, 13, 24, 0.95);
+      border: 1px solid rgba(20, 44, 68, 0.9);
+    }
+
+    .telemetry-row strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .telemetry-note {
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 1100px) {
+      body {
+        padding: 10px;
+      }
+      .quantum-shell {
+        max-height: none;
+        height: auto;
+        min-height: 100vh;  /* Ensure full height on smaller screens */
+      }
+      .q-main {
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 2.2fr);
+        grid-template-rows: minmax(400px, 1fr) minmax(200px, auto);  /* Give chat more space */
+        grid-template-areas:
+          "sessions chat"
+          "telemetry chat";
+      }
+      .panel.sessions {
+        grid-area: sessions;
+      }
+      .chat-panel {
+        grid-area: chat;
+      }
+      .panel.telemetry {
+        grid-area: telemetry;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .q-main {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "chat"
+          "sessions"
+          "telemetry";
+      }
+      .panel.sessions,
+      .panel.telemetry {
+        height: auto;
+        max-height: 260px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="quantum-shell">
+    <header class="q-header">
+      <div class="q-header-left">
+        <div class="th-chip">TH</div>
+        <div class="q-title-block">
+          <div class="q-title">Thronos Quantum</div>
+          <div class="q-subtitle">
+            Peer-to-peer encrypted AI console • Bound to Thronos chain
+          </div>
+        </div>
+      </div>
+      <div class="q-header-right">
+        <div class="pill">
+          <div class="pill-dot"></div>
+          <div class="pill-label">Encryption</div>
+          <div class="pill-value">Active</div>
+        </div>
+        <div class="pill pill-quiet">
+          <div class="pill-dot"></div>
+          <div class="pill-label">Mode</div>
+          <div class="pill-value" id="modeLabel">auto</div>
+        </div>
+        <div class="pill pill-quiet">
+          <div class="pill-dot"></div>
+          <div class="pill-label">Core</div>
+          <div class="pill-value" id="coreStatus">ready</div>
+        </div>
+        <div class="pill pill-danger">
+          <div class="pill-dot"></div>
+          <div class="pill-label" data-i18n="chat.wallet">THR wallet</div>
+          <div class="pill-value" id="walletLabel">unknown</div>
+        </div>
+        <select id="chatLanguageSelect" class="model-select" style="max-width:150px;">
+          <option value="en">English</option>
+          <option value="gr">Ελληνικά</option>
+          <option value="ja">日本語</option>
+          <option value="es">Español</option>
+          <option value="ru">Русский</option>
+        </select>
+      </div>
+    </header>
+
+    <main class="q-main">
+      <!-- Sessions -->
+      <section class="panel sessions">
+        <div class="panel-header">
+          <div class="panel-title">Sessions</div>
+          <div class="panel-actions">
+            <button class="btn-ghost" id="newSessionBtn">
+              ◦ New
+            </button>
+            <button class="btn-ghost" id="renameSessionBtn">
+              ✎ Rename
+            </button>
+            <button class="btn-ghost btn-ghost-danger" id="deleteSelectedBtn">
+              🗑 Delete selected
+            </button>
+            <button class="btn-ghost" id="cleanSessionsBtn" style="display: none">
+              🧹 Clean empty sessions
+            </button>
+          </div>
+        </div>
+        <div class="session-hint">Chat sessions burn AI Credits only. Architect sessions consume THR and return blueprints; session type is locked at creation.</div>
+        <ul id="sessionsList" class="sessions-list"></ul>
+      </section>
+
+      <!-- Chat -->
+      <section class="chat-panel">
+        <div class="chat-panel-inner">
+          <div class="chat-header-row">
+            <div class="chat-title-block">
+              <div id="sessionTitle">Mesh session</div>
+              <div id="sessionStatusTag">Session: loading…</div>
+            </div>
+            <div class="chat-badges-row">
+              <div class="badge">
+                Model:
+                <strong id="modelStatus">auto</strong>
+              </div>
+              <div class="badge">
+                AI Credits:
+                <strong id="usageStatus">–</strong>
+              </div>
+              <div class="badge">
+                Voice:
+                <strong id="voiceDeviceStatus">checking…</strong>
+              </div>
+            </div>
+          </div>
+
+          <div id="messages"></div>
+
+          <div class="chat-input-block">
+            <div class="wallet-row">
+              <span class="wallet-label" data-i18n="chat.bound_wallet">Bound wallet:</span>
+              <input
+                id="walletInput"
+                placeholder="THR address"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="input-row-main">
+              <textarea
+                id="messageInput"
+                placeholder="Type a command to Thronos…"
+              ></textarea>
+
+              <div class="input-side">
+                <div class="attach-row">
+                  <label for="fileInput" class="attach-btn">
+                    📎 Attach file
+                  </label>
+                  <input id="fileInput" type="file" multiple />
+                  <select id="modelSelect" class="model-select">
+                    <option value="auto">Auto (Thronos chooses)</option>
+                  </select>
+                  <button id="openAIPacksBtn" class="attach-btn" type="button" title="Buy AI Credits" data-i18n="chat.ai_packs">💳 AI Packs</button>
+                </div>
+                <button id="sendBtn" class="send-btn">
+                  SEND
+                </button>
+              </div>
+            </div>
+
+            <div id="pendingFilesRow" style="display: none">
+              <div class="pending-files-list" id="pendingFilesList"></div>
+              <div class="remove-link" id="clearPendingBtn">remove</div>
+            </div>
+
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px;
+              "
+            >
+              <div id="uploadStatus"></div>
+              <!-- usageStatus text now handled in header badge -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Telemetry -->
+      <section class="panel telemetry">
+        <div class="panel-header">
+          <div class="panel-title">Node Telemetry</div>
+        </div>
+        <div class="telemetry-kv">
+          <div class="telemetry-row">
+            <span>Hashrate (local)</span>
+            <strong id="hashrateLabel">0 H/s</strong>
+          </div>
+          <div class="telemetry-row">
+            <span>Pending TXs</span>
+            <strong id="pendingTxsLabel">0</strong>
+          </div>
+          <div class="telemetry-row">
+            <span>Difficulty</span>
+            <strong id="difficultyLabel">–</strong>
+          </div>
+          <div class="telemetry-row">
+            <span>AI Credits</span>
+            <strong id="creditsLabel">–</strong>
+          </div>
+        </div>
+        <div class="telemetry-note">
+          Offline corpus: best blocks from conversations will be promoted to the
+          AI training dataset automatically.
+        </div>
+      </section>
+    </main>
+  </div>
+
+
+  <div id="aiPacksModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:9999; align-items:center; justify-content:center;">
+    <div style="width:min(680px,92vw); background:#071810; border:1px solid #1a3b2e; border-radius:14px; padding:16px; box-shadow:0 20px 50px rgba(0,0,0,.45);">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px;">
+        <strong style="color:#00ff66;">AI Packs / Buy Credits</strong>
+        <button id="closeAIPacksBtn" class="btn-ghost" type="button">Close</button>
+      </div>
+      <div id="aiPacksWalletInfo" style="font-size:12px; color:#7aa398; margin-bottom:10px;"></div>
+      <div id="aiPacksStatus" style="font-size:12px; margin-bottom:10px;"></div>
+      <div id="aiPacksList" style="display:grid; gap:10px;"></div>
+    </div>
+  </div>
+
+  <script>
+    // --- Endpoint constants ---
+    const API_WALLET = "/api/ai/wallet";
+    const API_SESSIONS = "/api/chat/sessions";
+    const API_SESSION_DETAIL = (id) => `/api/chat/session/${id}`;
+    const API_SESSION_CREATE = "/api/chat/session/new";
+    const API_SESSION_MESSAGES = (id) => `/api/chat/session/${id}/messages`;
+    const API_CHAT = "/api/chat";
+    const API_FILES = "/api/ai/files/upload";
+    const API_TELEMETRY = "/api/ai/telemetry";
+    const API_FEEDBACK = "/api/ai/feedback";
+    const API_MODELS = "/api/ai_models";
+    const API_SESSION_MODEL = (id) => `/api/ai_sessions/${id}/model`;
+    const API_HEALTH = "/api/ai/providers/health";
+    const API_AI_PACKS = "/api/ai_packs";
+    const API_AI_PURCHASE_PACK = "/api/ai_purchase_pack";
+    const API_AI_CREDITS = "/api/ai_credits";
+    const API_X9_STATUS = "/api/voice/x9_status";
+    const ADMIN_SECRET_KEY = "thronos_admin_secret";
+    const ADMIN_MODE_KEY = "thronos_admin_mode";
+    const ACTIVE_SESSION_KEY = "thronos_ai_active_session";
+    const SESSION_CACHE_KEY = "thronos_ai_session_cache_v1";
+    const SELECTED_MODEL_KEY = "thronos_ai_selected_model_v1";
+    window.aiCredits = Number.NaN;
+
+    // --- DOM refs ---
+    let sessionsListEl,
+      messagesEl,
+      walletInputEl,
+      walletLabelEl,
+      messageInputEl,
+      fileInputEl,
+      pendingFilesRowEl,
+      pendingFilesListEl,
+      clearPendingBtnEl,
+      uploadStatusEl,
+      usageStatusEl,
+      sendBtnEl,
+      modelSelectEl,
+      modelStatusEl,
+      coreStatusEl,
+      sessionTitleEl,
+      sessionStatusTagEl,
+      cleanSessionsBtnEl,
+      hashrateLabelEl,
+      pendingTxsLabelEl,
+      difficultyLabelEl,
+      creditsLabelEl,
+      voiceDeviceStatusEl,
+      chatLanguageSelectEl,
+      openAIPacksBtnEl,
+      aiPacksModalEl,
+      closeAIPacksBtnEl,
+      aiPacksListEl,
+      aiPacksStatusEl,
+      aiPacksWalletInfoEl;
+
+    let sessionMessages = [];
+    let messagesBySession = {};
+    let defaultModelId = "auto";
+    let pendingModelSelection = null;
+
+    // Memory optimization: limit message history to prevent unbounded growth
+    const MAX_MESSAGES = 200;
+
+    function trimMessages(messages) {
+      if (messages.length > MAX_MESSAGES) {
+        return messages.slice(-MAX_MESSAGES);
+      }
+      return messages;
+    }
+
+    function cacheDom() {
+      sessionsListEl = document.getElementById("sessionsList");
+      messagesEl = document.getElementById("messages");
+      walletInputEl = document.getElementById("walletInput");
+      walletLabelEl = document.getElementById("walletLabel");
+      messageInputEl = document.getElementById("messageInput");
+      fileInputEl = document.getElementById("fileInput");
+      pendingFilesRowEl = document.getElementById("pendingFilesRow");
+      pendingFilesListEl = document.getElementById("pendingFilesList");
+      clearPendingBtnEl = document.getElementById("clearPendingBtn");
+      uploadStatusEl = document.getElementById("uploadStatus");
+      usageStatusEl = document.getElementById("usageStatus");
+      sendBtnEl = document.getElementById("sendBtn");
+      modelSelectEl = document.getElementById("modelSelect");
+      modelStatusEl = document.getElementById("modelStatus");
+      coreStatusEl = document.getElementById("coreStatus");
+      sessionTitleEl = document.getElementById("sessionTitle");
+      sessionStatusTagEl = document.getElementById("sessionStatusTag");
+      cleanSessionsBtnEl = document.getElementById("cleanSessionsBtn");
+      hashrateLabelEl = document.getElementById("hashrateLabel");
+      pendingTxsLabelEl = document.getElementById("pendingTxsLabel");
+      difficultyLabelEl = document.getElementById("difficultyLabel");
+      creditsLabelEl = document.getElementById("creditsLabel");
+      voiceDeviceStatusEl = document.getElementById("voiceDeviceStatus");
+      chatLanguageSelectEl = document.getElementById("chatLanguageSelect");
+      openAIPacksBtnEl = document.getElementById("openAIPacksBtn");
+      aiPacksModalEl = document.getElementById("aiPacksModal");
+      closeAIPacksBtnEl = document.getElementById("closeAIPacksBtn");
+      aiPacksListEl = document.getElementById("aiPacksList");
+      aiPacksStatusEl = document.getElementById("aiPacksStatus");
+      aiPacksWalletInfoEl = document.getElementById("aiPacksWalletInfo");
+    }
+
+    // --- State ---
+    let currentSessionId = localStorage.getItem(ACTIVE_SESSION_KEY) || null;
+    let aiSessions = [];
+    let selectedSessionIds = new Set();
+    let pendingFiles = []; // { id, name, size }
+    let receivedFiles = []; // for any AI-generated [[FILE:...]] blocks
+    let adminSecret = "";
+    let adminMode = false;
+    // --- Utilities ---
+    function setUploadStatus(text, mode = "") {
+      uploadStatusEl.textContent = text || "";
+      uploadStatusEl.classList.remove("ok", "error");
+      if (mode) uploadStatusEl.classList.add(mode);
+    }
+
+    function sessionTypeLabel(meta = {}) {
+      const raw =
+        meta.session_type || (meta.meta && meta.meta.session_type) || "chat";
+      return String(raw || "chat").toUpperCase();
+    }
+
+    function setSessionStatus(text) {
+      sessionStatusTagEl.textContent = text;
+    }
+
+    function setSending(enabled) {
+      sendBtnEl.disabled = !enabled;
+    }
+
+    function formatSize(bytes) {
+      if (bytes == null) return "";
+      if (bytes < 1024) return bytes + " B";
+      const kb = bytes / 1024;
+      if (kb < 1024) return kb.toFixed(1) + " KB";
+      const mb = kb / 1024;
+      return mb.toFixed(1) + " MB";
+    }
+
+    function scrollMessagesToBottom() {
+      // Double requestAnimationFrame for smooth scrolling
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        });
+      });
+
+      // Fallback timeout to ensure scroll happens even if rAF doesn't work
+      setTimeout(() => {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }, 50);
+    }
+
+    function persistSessionCache() {
+      try {
+        const wallet = (walletInputEl && walletInputEl.value ? walletInputEl.value.trim() : "") || "";
+        const payload = {
+          wallet: wallet,
+          sessions: aiSessions || [],
+          messagesBySession: messagesBySession || {},
+        };
+        localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(payload));
+      } catch (e) {
+        console.warn("persist cache failed", e);
+      }
+    }
+
+    function updateAdminControls() {
+      if (!cleanSessionsBtnEl) return;
+      const visible = !!adminSecret || adminMode;
+      cleanSessionsBtnEl.style.display = visible ? "inline-flex" : "none";
+    }
+
+    function initAdminAccess() {
+      const params = new URLSearchParams(window.location.search);
+      const querySecret = params.get("admin_secret") || params.get("secret");
+      if (querySecret) {
+        localStorage.setItem(ADMIN_SECRET_KEY, querySecret);
+      }
+      if (params.get("admin") === "1") {
+        localStorage.setItem(ADMIN_MODE_KEY, "1");
+      }
+
+      adminSecret =
+        localStorage.getItem(ADMIN_SECRET_KEY) || window.ADMIN_SECRET || "";
+      adminMode = localStorage.getItem(ADMIN_MODE_KEY) === "1";
+      updateAdminControls();
+    }
+
+    function hydrateSessionCache() {
+      try {
+        const raw = localStorage.getItem(SESSION_CACHE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+
+        // Check wallet match: skip hydration if wallet changed, but DON'T
+        // destroy localStorage. The server fetch in loadSessions() will
+        // provide the authoritative data and persistSessionCache() will update.
+        const cachedWallet = parsed.wallet || "";
+        const currentWallet = (walletInputEl && walletInputEl.value ? walletInputEl.value.trim() : "") || (walletSession ? walletSession.getAddress() || "" : "");
+        if (cachedWallet && currentWallet && cachedWallet !== currentWallet) {
+          // Wallet changed - let loadSessions() handle from server
+          return;
+        }
+
+        aiSessions = parsed.sessions || [];
+        messagesBySession = parsed.messagesBySession || {};
+        if (!currentSessionId && aiSessions.length) {
+          currentSessionId = aiSessions[0].id;
+        }
+        if (currentSessionId && messagesBySession[currentSessionId]) {
+          sessionMessages = messagesBySession[currentSessionId] || [];
+          renderSessions();
+          renderMessages(sessionMessages);
+        }
+      } catch (e) {
+        console.warn("hydrate cache failed", e);
+      }
+    }
+
+    function updateSessionMessageCount(sessionId) {
+      aiSessions = aiSessions.map((s) => {
+        if (s.id === sessionId) {
+          const count = (messagesBySession[sessionId] || []).length;
+          return { ...s, message_count: count };
+        }
+        return s;
+      });
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    // Extract [[FILE:name.ext]]...[[/FILE]] blocks from AI text, return:
+    // { cleanedText, files: [{name, content}] }
+    function extractAiFilesFromText(raw) {
+      const files = [];
+      let text = raw;
+      const regex = /\[\[FILE:([^\]]+)\]\]([\s\S]*?)\[\[\/FILE\]\]/g;
+      let match;
+      while ((match = regex.exec(raw)) !== null) {
+        const name = match[1].trim();
+        const content = match[2];
+        files.push({ name, content });
+      }
+      text = raw.replace(regex, "").trim();
+      return { cleanedText: text, files };
+    }
+
+    // --- Rendering ---
+
+    function renderSessions() {
+      sessionsListEl.innerHTML = "";
+      aiSessions.forEach((s) => {
+        const li = document.createElement("li");
+        li.className =
+          "session-item" + (s.id === currentSessionId ? " active" : "");
+        li.dataset.id = s.id;
+
+        const nameRow = document.createElement("div");
+        nameRow.className = "session-name-row";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "session-select";
+        checkbox.checked = selectedSessionIds.has(s.id);
+        checkbox.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (checkbox.checked) {
+            selectedSessionIds.add(s.id);
+          } else {
+            selectedSessionIds.delete(s.id);
+          }
+          updateDeleteSelectedButtonState();
+        });
+
+        const nameSpan = document.createElement("div");
+        nameSpan.className = "session-name";
+        nameSpan.textContent = s.title || "Untitled session";
+
+        // Add delete button
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "session-delete-btn";
+        deleteBtn.innerHTML = "×";
+        deleteBtn.title = "Delete session";
+        deleteBtn.addEventListener("click", async (e) => {
+          e.stopPropagation(); // Don't trigger session switch
+          if (!confirm(`Delete "${s.title || 'Untitled session'}"?`)) return;
+
+          try {
+            const res = await fetch(API_SESSION_DETAIL(s.id), {
+              method: "DELETE",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ wallet: walletInputEl.value.trim() || null }),
+            });
+            const payload = (await res.json().catch(() => ({}))) || {};
+            if (!res.ok) throw new Error(payload.error || `HTTP ${res.status}`);
+
+            const wasDeleted = payload.deleted !== false; // idempotent: deleted=false means already gone
+            if (!wasDeleted) {
+              setSessionStatus("Session already removed");
+              return;
+            }
+
+            aiSessions = aiSessions.filter((sess) => sess.id !== s.id);
+            delete messagesBySession[s.id];
+
+            if (s.id === currentSessionId) {
+              currentSessionId = aiSessions.length ? aiSessions[0].id : null;
+              if (currentSessionId) {
+                localStorage.setItem(ACTIVE_SESSION_KEY, currentSessionId);
+                await loadSessionMessages(currentSessionId);
+                const active = aiSessions.find((x) => x.id === currentSessionId);
+                sessionTitleEl.textContent = (active && active.title) || "Mesh session";
+              } else {
+                localStorage.removeItem(ACTIVE_SESSION_KEY);
+                const created = await createSession();
+                if (created && created.id) {
+                  await loadSessionMessages(created.id);
+                }
+              }
+            }
+
+            persistSessionCache();
+            renderSessions();
+          } catch (e) {
+            console.error("Delete session error:", e);
+            alert("Failed to delete session");
+          }
+        });
+
+        const statusPill = document.createElement("div");
+        const sessionType = sessionTypeLabel(s);
+        statusPill.className = `session-status-pill ${sessionType === "ARCHITECT" ? "architect" : "chat"}`;
+        const badgeIcon = sessionType === "ARCHITECT" ? "🏗️" : "💬";
+        statusPill.innerHTML = `<span>${badgeIcon} ${sessionType}</span> · ${(s.model || "auto").toUpperCase()}`;
+
+        nameRow.appendChild(checkbox);
+        nameRow.appendChild(nameSpan);
+        nameRow.appendChild(deleteBtn);
+
+        const metaRow = document.createElement("div");
+        metaRow.className = "session-meta";
+        metaRow.innerHTML = `<span>${
+          s.message_count || 0
+        } messages</span><span>${s.last_updated || ""}</span>`;
+
+        li.appendChild(nameRow);
+        li.appendChild(statusPill);
+        li.appendChild(metaRow);
+
+        li.addEventListener("click", () => {
+          if (s.id !== currentSessionId) {
+            currentSessionId = s.id;
+            localStorage.setItem(ACTIVE_SESSION_KEY, currentSessionId);
+            const cachedMsgs = messagesBySession[s.id] || [];
+            if (cachedMsgs.length) {
+              renderMessages(cachedMsgs);
+            }
+            loadSessionMessages(s.id);
+            renderSessions();
+            sessionTitleEl.textContent = s.title || "Mesh session";
+          }
+        });
+
+        sessionsListEl.appendChild(li);
+      });
+      updateDeleteSelectedButtonState();
+    }
+
+    function renderPendingFiles() {
+      if (!pendingFiles.length) {
+        pendingFilesRowEl.style.display = "none";
+        pendingFilesListEl.innerHTML = "";
+        return;
+      }
+      pendingFilesRowEl.style.display = "flex";
+      pendingFilesListEl.innerHTML = "";
+      pendingFiles.forEach((f) => {
+        const chip = document.createElement("div");
+        chip.className = "pending-file-chip";
+        chip.innerHTML = `<span>${f.name}</span> (${formatSize(f.size)})`;
+        pendingFilesListEl.appendChild(chip);
+      });
+    }
+
+    function formatMessageContent(text) {
+      if (!text) return "";
+
+      // Split by double newlines to preserve paragraph structure
+      const paragraphs = text.split(/\n\n+/);
+
+      return paragraphs.map(para => {
+        // Escape HTML entities
+        let formatted = para
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+
+        // Bold: **text** or __text__
+        formatted = formatted.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+        formatted = formatted.replace(/__(.+?)__/g, "<strong>$1</strong>");
+
+        // Italic: *text* or _text_
+        formatted = formatted.replace(/\*(.*?)\*/g, "<em>$1</em>");
+        formatted = formatted.replace(/_(.+?)_/g, "<em>$1</em>");
+
+        // Code: `text`
+        formatted = formatted.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+        // Headings: ## text
+        if (formatted.match(/^#{1,6}\s/)) {
+          const match = formatted.match(/^(#{1,6})\s(.+)$/);
+          if (match) {
+            const level = match[1].length;
+            formatted = `<h${level} class="msg-heading">${match[2]}</h${level}>`;
+          }
+        }
+
+        // Bullet lists: - item or * item
+        if (formatted.includes("\n-") || formatted.includes("\n*") || formatted.startsWith("-") || formatted.startsWith("*")) {
+          const lines = formatted.split("\n");
+          let inList = false;
+          formatted = lines.map(line => {
+            if (line.match(/^[-*]\s/)) {
+              if (!inList) {
+                inList = true;
+                return "<ul><li>" + line.replace(/^[-*]\s/, "");
+              }
+              return "<li>" + line.replace(/^[-*]\s/, "");
+            } else if (inList) {
+              inList = false;
+              return "</ul>" + line;
+            }
+            return line;
+          }).join("</li>\n");
+          if (inList) formatted += "</li></ul>";
+        }
+
+        // Preserve line breaks within paragraphs
+        formatted = formatted.replace(/\n/g, "<br/>");
+
+        return `<p>${formatted}</p>`;
+      }).join("");
+    }
+
+    function createThumbButtons(messageText) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "msg-actions";
+
+      const upBtn = document.createElement("button");
+      upBtn.className = "thumb-btn up";
+      upBtn.innerHTML = "👍 <span>good</span>";
+
+      const downBtn = document.createElement("button");
+      downBtn.className = "thumb-btn down";
+      downBtn.innerHTML = "👎 <span>bad</span>";
+
+      function setActive(which) {
+        upBtn.classList.toggle("active", which === "up");
+        downBtn.classList.toggle("active", which === "down");
+      }
+
+      async function sendFeedback(isUp) {
+        try {
+          await fetch(API_FEEDBACK, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              session_id: currentSessionId,
+              message_text: messageText,
+              thumbs_up: !!isUp,
+            }),
+          });
+        } catch (e) {
+          console.warn("Feedback error:", e);
+        }
+      }
+
+      upBtn.addEventListener("click", () => {
+        setActive("up");
+        sendFeedback(true);
+      });
+
+      downBtn.addEventListener("click", () => {
+        setActive("down");
+        sendFeedback(false);
+      });
+
+      wrapper.appendChild(upBtn);
+      wrapper.appendChild(downBtn);
+      return wrapper;
+    }
+
+    function appendMessage(msg) {
+      // msg: { role: "user" | "ai" | ..., content, model?, files? }
+      const row = document.createElement("div");
+      const isUser = msg.role === "user";
+      row.className = "msg-row " + (isUser ? "user" : "ai");
+
+      const avatar = document.createElement("div");
+      avatar.className = "msg-avatar";
+      avatar.textContent = isUser ? "YOU" : "AI";
+
+      const bubble = document.createElement("div");
+      bubble.className = "msg-bubble";
+
+      const header = document.createElement("div");
+      header.className = "msg-header";
+      const authorSpan = document.createElement("div");
+      authorSpan.className = "msg-author";
+      authorSpan.textContent = isUser ? "USER" : "QUANTUM AGENT";
+      const metaSpan = document.createElement("div");
+      metaSpan.className = "msg-model-tag";
+      if (msg.model) metaSpan.textContent = msg.model;
+      header.appendChild(authorSpan);
+      header.appendChild(metaSpan);
+
+      let text = msg.content || "";
+      let extraFiles = [];
+      if (!isUser && text) {
+        const extracted = extractAiFilesFromText(text);
+        text = extracted.cleanedText;
+        extraFiles = extracted.files;
+      }
+
+      const content = document.createElement("div");
+      content.className = "msg-content";
+      content.innerHTML = formatMessageContent(text);
+
+      bubble.appendChild(header);
+      bubble.appendChild(content);
+
+      const allFiles = []
+        .concat(msg.files || [])
+        .concat(
+          extraFiles.map((f) => ({
+            // placeholder; server should create real file_id if you want
+            name: f.name,
+            file_id: null,
+            inline_content: f.content,
+          }))
+        );
+
+      if (allFiles.length) {
+        const filesDiv = document.createElement("div");
+        filesDiv.className = "msg-files";
+        allFiles.forEach((f) => {
+          const fileName = f.name || f.filename || "file";
+          if (f.file_id) {
+            const a = document.createElement("a");
+            a.className = "msg-file-link";
+            a.href = `/api/ai/files/${encodeURIComponent(f.file_id)}`;
+            a.target = "_blank";
+            a.textContent = fileName;
+            filesDiv.appendChild(a);
+          } else if (f.url || f.filename || f.name) {
+            const a = document.createElement("a");
+            a.className = "msg-file-link";
+            const fallbackUrl = (f.filename || f.name) ? `/api/ai/generated/${encodeURIComponent(f.filename || f.name)}` : "#";
+            a.href = f.url || fallbackUrl;
+            a.target = "_blank";
+            a.textContent = fileName;
+            filesDiv.appendChild(a);
+          } else if (f.inline_content != null) {
+            const a = document.createElement("a");
+            a.className = "msg-file-link";
+            const blob = new Blob([f.inline_content], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            a.href = url;
+            a.download = fileName || "file.txt";
+            a.textContent = fileName || "inline.txt";
+            filesDiv.appendChild(a);
+          }
+        });
+        bubble.appendChild(filesDiv);
+      }
+
+      if (!isUser) {
+        const actions = createThumbButtons(text);
+        bubble.appendChild(actions);
+      }
+
+      row.appendChild(isUser ? bubble : avatar);
+      row.appendChild(isUser ? avatar : bubble);
+
+      messagesEl.appendChild(row);
+      scrollMessagesToBottom();
+    }
+
+    function renderMessages(list) {
+      sessionMessages = list || [];
+      messagesEl.innerHTML = "";
+      sessionMessages.forEach(appendMessage);
+    }
+
+    // --- API calls ---
+
+    function getCookieValue(name) {
+      const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\/+^])/g, "\\$1") + '=([^;]*)'));
+      return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    async function loadWallet() {
+      try {
+        // Read wallet from localStorage (same as other pages)
+        let w = walletSession.getAddress() || "";
+
+        // Fallback for new origin/domain migration: restore from cookie if local storage is empty
+        if (!w) {
+          const cookieWallet = getCookieValue("thr_address");
+          if (cookieWallet) {
+            w = cookieWallet;
+            try {
+              localStorage.setItem("thr_address", cookieWallet);
+            } catch (e) {
+              console.warn("Failed to store wallet fallback in localStorage", e);
+            }
+          }
+        }
+
+        walletInputEl.value = w;
+
+        // Update wallet label with connection status
+        const walletPill = walletLabelEl.parentElement;
+        if (w) {
+          walletLabelEl.textContent = w.slice(0, 6) + "…" + w.slice(-4);
+          walletPill.classList.remove('pill-danger');
+          walletPill.classList.add('pill-success');
+        } else {
+          walletLabelEl.textContent = "not connected";
+          walletPill.classList.remove('pill-success');
+          walletPill.classList.add('pill-danger');
+        }
+      } catch (e) {
+        console.warn("Wallet load failed", e);
+        walletLabelEl.textContent = "error";
+      }
+    }
+
+    async function loadSessions() {
+      try {
+        setSessionStatus("Loading sessions…");
+        const cachedSessions = Array.isArray(aiSessions) ? aiSessions.slice() : [];
+        const wallet = walletInputEl.value.trim();
+        const url = wallet
+          ? `${API_SESSIONS}?wallet=${encodeURIComponent(wallet)}`
+          : API_SESSIONS;
+        const res = await fetch(url, { credentials: "include" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        aiSessions = (data.sessions || []).map((s) => {
+          const count = (messagesBySession[s.id] || []).length;
+          return { ...s, message_count: count || s.message_count || 0 };
+        });
+
+        if (!aiSessions.length && cachedSessions.length) {
+          aiSessions = cachedSessions;
+        }
+
+        if (currentSessionId && !aiSessions.find((s) => s.id === currentSessionId)) {
+          currentSessionId = null;
+        }
+
+        if (!aiSessions.length) {
+          await createSession("New mesh session");
+        }
+
+        if (!currentSessionId && aiSessions.length) {
+          currentSessionId = aiSessions[0].id;
+        }
+
+        if (!currentSessionId) {
+          setSessionStatus("Failed to prepare a session");
+          renderSessions();
+          return;
+        }
+
+        localStorage.setItem(ACTIVE_SESSION_KEY, currentSessionId);
+        renderSessions();
+
+        const active = aiSessions.find((x) => x.id === currentSessionId);
+        if (active) sessionTitleEl.textContent = active.title || "Mesh session";
+        persistSessionCache();
+        await loadSessionMessages(currentSessionId);
+      } catch (e) {
+        console.error("loadSessions error", e);
+        setSessionStatus("Failed to load sessions");
+      }
+    }
+
+    async function pruneSessions() {
+      if (!adminSecret && !adminMode) {
+        setSessionStatus("Admin secret required for cleanup");
+        return;
+      }
+
+      try {
+        setSessionStatus("Cleaning empty sessions…");
+        const url = adminSecret
+          ? `/api/admin/prune_sessions?secret=${encodeURIComponent(adminSecret)}`
+          : "/api/admin/prune_sessions";
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(adminSecret ? { "X-Admin-Secret": adminSecret } : {}),
+          },
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`HTTP ${res.status}: ${errText}`);
+        }
+
+        const data = await res.json();
+        const deleted = data.deleted ?? 0;
+        const kept = data.kept ?? 0;
+        setSessionStatus(`Cleaned ${deleted} empty sessions (kept ${kept})`);
+        await loadSessions();
+      } catch (e) {
+        console.error("pruneSessions error", e);
+        setSessionStatus("Failed to clean sessions");
+      }
+    }
+
+    async function loadSessionMessages(id) {
+      setSessionStatus("Loading messages…");
+      try {
+        const wallet = walletInputEl.value.trim();
+        const url = wallet
+          ? `${API_SESSION_MESSAGES(id)}?wallet=${encodeURIComponent(wallet)}`
+          : API_SESSION_MESSAGES(id);
+        const res = await fetch(url);
+        if (res.status === 404) {
+          await handleMissingSession(id);
+          return;
+        }
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (data.error && data.error.toLowerCase().includes('session not found')) {
+          await handleMissingSession(id);
+          return;
+        }
+        // Only treat as missing if BOTH server session is null AND no messages
+        // (server now returns messages from disk even without session metadata)
+        if (!data.session && (!data.messages || data.messages.length === 0)
+            && (!messagesBySession[id] || messagesBySession[id].length === 0)) {
+          await handleMissingSession(id);
+          return;
+        }
+        const msgs = data.messages || [];
+        const sessionMeta = data.session || {};
+        const sessionModel =
+          sessionMeta.selected_model_id ||
+          (sessionMeta.meta && sessionMeta.meta.selected_model_id) ||
+          defaultModelId;
+        pendingModelSelection = sessionModel || defaultModelId;
+        applyModelSelection(pendingModelSelection);
+        const sessionIdx = aiSessions.findIndex((s) => s.id === id);
+        if (sessionIdx >= 0) {
+          aiSessions[sessionIdx].selected_model_id = sessionModel;
+          aiSessions[sessionIdx].meta = { ...(aiSessions[sessionIdx].meta || {}), selected_model_id: sessionModel };
+        }
+        messagesBySession[id] = msgs;
+        renderMessages(msgs);
+        updateSessionMessageCount(id);
+        renderSessions();
+        persistSessionCache();
+        const sessionType = sessionTypeLabel(sessionMeta);
+        setSessionStatus(`${sessionType} session`);
+      } catch (e) {
+        console.error("loadSessionMessages error", e);
+        setSessionStatus("Failed to load messages");
+      }
+    }
+
+    async function handleMissingSession(missingId = null) {
+      try {
+        if (missingId) {
+          aiSessions = aiSessions.filter((s) => s.id !== missingId);
+          if (currentSessionId === missingId) currentSessionId = null;
+          delete messagesBySession[missingId];
+          const stored = localStorage.getItem(ACTIVE_SESSION_KEY);
+          if (stored === missingId) localStorage.removeItem(ACTIVE_SESSION_KEY);
+        }
+
+        renderSessions();
+        persistSessionCache();
+
+        if (!aiSessions.length) {
+          const created = await createSession("New mesh session");
+          if (!created || !created.id) {
+            setSessionStatus("Failed to start new session");
+            return;
+          }
+        }
+
+        if (!currentSessionId && aiSessions.length) {
+          currentSessionId = aiSessions[0].id;
+        }
+
+        if (!currentSessionId) {
+          setSessionStatus("Failed to start new session");
+          return;
+        }
+
+        localStorage.setItem(ACTIVE_SESSION_KEY, currentSessionId);
+        const active = aiSessions.find((s) => s.id === currentSessionId);
+        if (active) sessionTitleEl.textContent = active.title || "Mesh session";
+
+        await loadSessionMessages(currentSessionId);
+      } catch (err) {
+        console.error("handleMissingSession", err);
+        setSessionStatus("Failed to start new session");
+      }
+    }
+
+    async function createSession(title = "New mesh session") {
+      try {
+        const wallet = walletInputEl.value.trim();
+        const res = await fetch(API_SESSION_CREATE, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            title,
+            wallet: wallet || null
+          }),
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        const session = data.session || {};
+        const newId = data.id || session.id;
+        const nextSession = { ...session, id: newId || session.id, title: session.title || title };
+        if (!nextSession.id) return null;
+        currentSessionId = nextSession.id;
+        localStorage.setItem(ACTIVE_SESSION_KEY, currentSessionId);
+        const existingIdx = aiSessions.findIndex((s) => s.id === nextSession.id);
+        if (existingIdx >= 0) {
+          aiSessions[existingIdx] = { ...aiSessions[existingIdx], ...nextSession };
+        } else {
+          aiSessions.unshift(nextSession);
+        }
+        messagesBySession[nextSession.id] = messagesBySession[nextSession.id] || [];
+        updateSessionMessageCount(nextSession.id);
+        persistSessionCache();
+        renderSessions();
+        sessionTitleEl.textContent = nextSession.title || "Mesh session";
+        return nextSession;
+      } catch (e) {
+        console.error("createSession error", e);
+        alert("Failed to create session. Check console for details.");
+        return null;
+      }
+    }
+
+    async function renameSession() {
+      if (!currentSessionId) return;
+      const s = aiSessions.find((x) => x.id === currentSessionId);
+      const currentName = s ? s.title || "" : "";
+      const newName = prompt("Rename session:", currentName);
+      if (!newName || newName === currentName) return;
+      try {
+        const res = await fetch(API_SESSION_DETAIL(currentSessionId), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ title: newName, wallet: walletInputEl.value.trim() || null }),
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        await loadSessions();
+      } catch (e) {
+        console.error("renameSession error", e);
+      }
+    }
+
+    function updateDeleteSelectedButtonState() {
+      const btn = document.getElementById("deleteSelectedBtn");
+      if (!btn) return;
+      const count = selectedSessionIds.size;
+      btn.disabled = count === 0;
+      btn.textContent =
+        count > 0
+          ? `🗑 Delete ${count} selected`
+          : "🗑 Delete selected";
+    }
+
+    async function deleteSelectedSessions() {
+      if (selectedSessionIds.size === 0) return;
+
+      const count = selectedSessionIds.size;
+      if (
+        !confirm(
+          `Delete ${count} selected session${count > 1 ? "s" : ""}? This cannot be undone.`
+        )
+      ) {
+        return;
+      }
+
+      const ids = Array.from(selectedSessionIds);
+      for (const id of ids) {
+        try {
+          const wallet = walletInputEl.value.trim();
+          const res = await fetch(`${API_SESSION_DETAIL(id)}${wallet ? `?wallet=${encodeURIComponent(wallet)}` : ''}`, {
+            method: "DELETE",
+            credentials: "include"
+          });
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          aiSessions = aiSessions.filter((s) => s.id !== id);
+          if (currentSessionId === id) {
+            currentSessionId = null;
+            messagesEl.innerHTML = "";
+            sessionTitleEl.textContent = "Thronos Quantum Chat";
+          }
+        } catch (err) {
+          console.error("Failed to delete session", id, err);
+        }
+      }
+
+      selectedSessionIds.clear();
+      renderSessions();
+      updateDeleteSelectedButtonState();
+    }
+
+    async function uploadFiles(files) {
+      if (!files || !files.length) return;
+      const form = new FormData();
+      for (const f of files) {
+        form.append("files", f, f.name);
+      }
+      // CRITICAL: Include wallet and session_id for ownership tracking
+      const wallet = walletInputEl.value.trim();
+      if (wallet) {
+        form.append("wallet", wallet);
+      }
+      if (currentSessionId) {
+        form.append("session_id", currentSessionId);
+      }
+      setUploadStatus("Uploading files…");
+      try {
+        const res = await fetch(API_FILES, {
+          method: "POST",
+          body: form,
+        });
+        const data = await res.json();
+
+        // FIX 1B: Handle degraded mode response (ok=false but HTTP 200)
+        if (!data.ok) {
+          const errorMsg = data.error || "Upload failed";
+          const hint = data.fallback_hint || "Please try again";
+          console.error("Upload degraded mode:", data);
+          setUploadStatus(`${errorMsg}. ${hint}`, "error");
+          if (data.mode === "degraded") {
+            showDegradedModeNotice(`File upload unavailable: ${data.error}`);
+          }
+          return;
+        }
+
+        const uploaded = data.files || [];
+        uploaded.forEach((f) => {
+          pendingFiles.push({
+            id: f.id,
+            name: f.name,
+            size: f.size,
+          });
+        });
+        renderPendingFiles();
+        setUploadStatus("Files uploaded", "ok");
+      } catch (e) {
+        console.error("uploadFiles error", e);
+        setUploadStatus("Upload failed. Please try again", "error");
+      }
+    }
+
+    async function loadTelemetry() {
+      try {
+        const res = await fetch(API_TELEMETRY);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.hashrate != null)
+          hashrateLabelEl.textContent = data.hashrate + " H/s";
+        if (data.pending_txs != null)
+          pendingTxsLabelEl.textContent = data.pending_txs;
+        if (data.difficulty != null)
+          difficultyLabelEl.textContent = data.difficulty;
+        const telemetryCredits = (data.ai_credits ?? data.credits);
+        if (telemetryCredits != null) creditsLabelEl.textContent = Number(telemetryCredits) || 0;
+      } catch (e) {
+        console.warn("telemetry error", e);
+      }
+    }
+
+    function showDegradedModeNotice(message) {
+      const noticeId = "degraded-mode-notice";
+      let notice = document.getElementById(noticeId);
+      if (!notice) {
+        notice = document.createElement("div");
+        notice.id = noticeId;
+        notice.style.cssText = "background: rgba(255, 75, 129, 0.15); border: 1px solid var(--danger); border-radius: 12px; padding: 10px 14px; margin: 8px 0 8px 0; font-size: 12px; color: var(--danger);";
+        const inputBlock = document.querySelector(".chat-input-block");
+        if (inputBlock) inputBlock.insertAdjacentElement("afterbegin", notice);
+      }
+      notice.innerHTML = `⚠️ <strong>Degraded Mode:</strong> ${message}. AUTO routing still available.`;
+    }
+
+    function hideDegradedModeNotice() {
+      const notice = document.getElementById("degraded-mode-notice");
+      if (notice) notice.remove();
+    }
+
+    let lastValidModelSelection = "auto";
+    const modelMetaById = new Map();
+
+    function applyModelSelection(preferred) {
+      if (!modelSelectEl) return;
+      const fallback = defaultModelId || "auto";
+      const desired = preferred || pendingModelSelection || fallback;
+      const hasDesired = !!modelSelectEl.querySelector(`option[value="${desired}"]`);
+      const target = hasDesired ? desired : fallback;
+      modelSelectEl.value = target;
+      pendingModelSelection = target;
+      lastValidModelSelection = target;
+      if (modelStatusEl) modelStatusEl.textContent = target || "auto";
+    }
+
+    async function loadModels() {
+      if (!modelSelectEl) return;
+
+      // Get previously selected model from localStorage first, then fall back to other sources
+      const previousValue = localStorage.getItem(SELECTED_MODEL_KEY) || modelSelectEl.value || pendingModelSelection || defaultModelId || "auto";
+      modelSelectEl.innerHTML = "";
+      const autoOpt = document.createElement("option");
+      autoOpt.value = "auto";
+      autoOpt.textContent = "Auto (Thronos chooses)";
+      modelSelectEl.appendChild(autoOpt);
+
+      try {
+        const res = await fetch(API_MODELS);
+
+        let data = null;
+        try {
+          data = await res.json();
+        } catch (e) {
+          console.error("Failed to parse models response", e);
+          hideDegradedModeNotice();
+          applyModelSelection(previousValue);
+          return;
+        }
+
+        const models = Array.isArray(data.models) ? data.models : [];
+        defaultModelId = data.default_model_id || "auto";
+        modelMetaById.clear();
+
+        if (!models.length) {
+          autoOpt.textContent = "AUTO only (router available)";
+          applyModelSelection(defaultModelId);
+          return;
+        }
+
+        models.forEach((model) => {
+          if (!model || !model.id || model.id === "auto") return;
+          modelMetaById.set(model.id, model);
+          const opt = document.createElement("option");
+          opt.value = model.id;
+          const badge = model.id === "offline_corpus"
+            ? " · [On-chain / local]"
+            : (model.id === "thrai" ? " · [Router]" : "");
+          opt.textContent = `${model.label || model.display_name || model.id}${badge}`;
+          if (model.enabled === false) {
+            opt.disabled = true;
+            opt.textContent += `${model.health_reason ? ` (disabled: ${model.health_reason})` : " (disabled)"}`;
+          } else if (model.degraded === true) {
+            opt.textContent += `${model.health_reason ? ` (degraded: ${model.health_reason})` : " (degraded)"}`;
+          }
+          modelSelectEl.appendChild(opt);
+        });
+
+        applyModelSelection(previousValue);
+      } catch (e) {
+        console.warn("model load failed", e);
+        autoOpt.textContent = "AUTO only (router available)";
+        applyModelSelection(defaultModelId);
+      }
+    }
+
+    async function persistModelSelection(modelId) {
+      if (!currentSessionId || !modelId) {
+        pendingModelSelection = modelId || defaultModelId;
+        return;
+      }
+
+      try {
+        const res = await fetch(API_SESSION_MODEL(currentSessionId), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model_id: modelId, wallet: walletInputEl.value.trim() || null }),
+        });
+
+        let data = {};
+        try { data = await res.json(); } catch (_) { data = {}; }
+
+        if (!res.ok) {
+          if (res.status === 400 && data && data.code === "insufficient_ai_credits") {
+            usageStatusEl.textContent = "Δεν έχεις άλλα Quantum credits…";
+            if (lastValidModelSelection && modelSelectEl.querySelector(`option[value="${lastValidModelSelection}"]`)) {
+              modelSelectEl.value = lastValidModelSelection;
+              pendingModelSelection = lastValidModelSelection;
+            }
+            return;
+          }
+          throw new Error((data && data.error) || `HTTP ${res.status}`);
+        }
+
+        const selected = (data && data.selected_model_id) || modelId;
+        applyModelSelection(selected);
+
+        const idx = aiSessions.findIndex((s) => s.id === currentSessionId);
+        if (idx >= 0) {
+          aiSessions[idx].selected_model_id = selected;
+          aiSessions[idx].meta = { ...(aiSessions[idx].meta || {}), selected_model_id: selected };
+        }
+        pendingModelSelection = selected;
+      } catch (e) {
+        console.warn("Failed to persist model selection", e);
+        if (lastValidModelSelection && modelSelectEl.querySelector(`option[value="${lastValidModelSelection}"]`)) {
+          modelSelectEl.value = lastValidModelSelection;
+          pendingModelSelection = lastValidModelSelection;
+        }
+      }
+    }
+
+    function extractAIResponseFromText(raw) {
+      if (raw == null) return "";
+
+      if (typeof raw === "object") {
+        if (typeof raw.reply === "string") {
+          raw = raw.reply;
+        } else if (typeof raw.response === "string") {
+          raw = raw.response;
+        } else if (typeof raw.text === "string") {
+          raw = raw.text;
+        } else if (typeof raw.error === "string") {
+          raw = raw.error;
+        } else {
+          try {
+            raw = JSON.stringify(raw);
+          } catch (_) {
+            raw = String(raw);
+          }
+        }
+      }
+
+      if (typeof raw !== "string") {
+        raw = String(raw);
+      }
+
+      return raw.replace(/^"|"$/g, "").trim();
+    }
+
+    async function sendMessage() {
+      const text = messageInputEl.value.trim();
+      if (!text && !pendingFiles.length) return;
+      if (!currentSessionId) {
+        alert("No active session. Create one first.");
+        return;
+      }
+      const wallet = walletInputEl.value.trim();
+      setSending(false);
+      setSessionStatus("Sending…");
+      usageStatusEl.textContent = "";
+
+      const model = modelSelectEl.value || pendingModelSelection || defaultModelId || "auto";
+      modelStatusEl.textContent = model;
+
+      const history = (sessionMessages || []).map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+      history.push({ role: "user", content: text });
+
+      const payload = {
+        session_id: currentSessionId,
+        wallet: wallet || null,
+        messages: history,
+        message: text,
+        attachments: pendingFiles.map((f) => f.id),
+        model_id: model,
+      };
+
+      // optimistic render user message
+      const userMessage = { role: "user", content: text, model: model };
+      sessionMessages.push(userMessage);
+      sessionMessages = trimMessages(sessionMessages); // Prevent unbounded growth
+      messagesBySession[currentSessionId] = sessionMessages.slice();
+      updateSessionMessageCount(currentSessionId);
+      persistSessionCache();
+      renderSessions();
+      appendMessage(userMessage);
+
+      messageInputEl.value = "";
+      pendingFiles = [];
+      renderPendingFiles();
+
+      try {
+        const res = await fetch(API_CHAT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        let data = null;
+        try {
+          data = await res.json();
+        } catch (e) {
+          // keep null
+        }
+
+        if (!res.ok || (data && (data.ok === false || data.error))) {
+          if (data && data.error === "provider_blocked_by_mode") {
+            const blockedProvider = String(data.provider || "Unknown");
+            appendMessage({
+              role: "assistant",
+              content: `Ο provider ${blockedProvider} είναι κλειδωμένος από τις ρυθμίσεις THRONOS. Άνοιξέ τον από το Admin ή δοκίμασε άλλο μοντέλο.`,
+              model: "system",
+            });
+            setSessionStatus("Provider blocked");
+            return;
+          }
+          if (data && data.error === "insufficient_ai_credits") {
+            usageStatusEl.textContent = "Δεν έχεις άλλα Quantum credits…";
+            await refreshCreditsForWallet(wallet);
+            setSessionStatus("No credits");
+            return;
+          }
+          const errText = (data && (data.error || data.details)) || `HTTP ${res.status}`;
+          appendMessage({
+            role: "assistant",
+            content: `Provider error: ${errText}. Try another model or Auto.`,
+            model: "system",
+          });
+          setSessionStatus("Provider error");
+          return;
+        }
+
+        if (!data) {
+          appendMessage({
+            role: "assistant",
+            content: "Provider error: empty response. Try another model or Auto.",
+            model: "system",
+          });
+          setSessionStatus("Provider error");
+          return;
+        }
+
+        const rawReply = (data && (data.reply || data.message || data.response || data.text || data.error)) || data;
+        const aiText = extractAIResponseFromText(rawReply);
+        if (aiText) {
+          const assistantMessage = {
+            role: "assistant",
+            content: aiText,
+            model: data.model || model,
+            files: (data.files || []).map((f) => ({
+              file_id: f.id || f.file_id,
+              name: f.name || f.filename,
+              filename: f.filename || f.name,
+              url: f.url || null,
+            })),
+          };
+          sessionMessages.push(assistantMessage);
+          sessionMessages = trimMessages(sessionMessages); // Prevent unbounded growth
+          messagesBySession[currentSessionId] = sessionMessages.slice();
+          updateSessionMessageCount(currentSessionId);
+          persistSessionCache();
+          renderSessions();
+          appendMessage(assistantMessage);
+        }
+
+        if (data.usage) {
+          const u = data.usage;
+          usageStatusEl.textContent = `Usage: in ${u.input_tokens || 0} / out ${u.output_tokens || 0}`;
+        } else if ((data.ai_credits ?? data.credits) !== undefined) {
+          const credits = Number(data.ai_credits ?? data.credits) || 0;
+          window.aiCredits = credits;
+          usageStatusEl.textContent = `${credits}`;
+          creditsLabelEl.textContent = credits;
+        }
+
+        if (data.wallet) {
+          walletInputEl.value = data.wallet;
+          const w = data.wallet;
+          walletLabelEl.textContent = w.slice(0, 6) + "…" + w.slice(-4);
+        }
+
+        setSessionStatus("Ready");
+      } catch (e) {
+        console.error("sendMessage error", e);
+        appendMessage({
+          role: "assistant",
+          content: "Provider error. Try another model or Auto.",
+          model: "system",
+        });
+        setSessionStatus("Error sending message");
+      } finally {
+        setSending(true);
+      }
+    }
+
+
+    function setAIPacksStatus(text, isError = false) {
+      if (!aiPacksStatusEl) return;
+      aiPacksStatusEl.textContent = text || "";
+      aiPacksStatusEl.style.color = isError ? "#ff4b81" : "#7aa398";
+    }
+
+    async function refreshCreditsForWallet(wallet) {
+      if (!wallet) return;
+      try {
+        const res = await fetch(`${API_AI_CREDITS}?wallet=${encodeURIComponent(wallet)}`);
+        const data = await res.json();
+        if (data && (data.ai_credits ?? data.credits) != null) {
+          const credits = Number(data.ai_credits ?? data.credits) || 0;
+          window.aiCredits = credits;
+          creditsLabelEl.textContent = credits;
+          usageStatusEl.textContent = `${credits}`;
+          if (aiPacksWalletInfoEl && wallet) {
+            aiPacksWalletInfoEl.textContent = `Bound wallet: ${wallet} • AI Credits: ${credits}`;
+          }
+        }
+      } catch (_) {}
+    }
+
+    async function buyAIPack(code, btnEl) {
+      const wallet = walletInputEl.value.trim();
+      if (!wallet) {
+        setAIPacksStatus("Δώσε πρώτα THR wallet στη Quantum Chat για να αγοράσεις credits.", true);
+        return;
+      }
+      const original = btnEl ? btnEl.textContent : "";
+      if (btnEl) { btnEl.disabled = true; btnEl.textContent = "Processing…"; }
+      setAIPacksStatus(`Processing purchase for ${code}…`);
+      try {
+        const res = await fetch(API_AI_PURCHASE_PACK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wallet, pack: code }),
+        });
+        const data = await res.json();
+        if (!res.ok || data.status !== "granted") {
+          throw new Error((data && (data.message || data.error)) || `HTTP ${res.status}`);
+        }
+        setAIPacksStatus(`Purchased ${data.pack?.title || code}. Total credits: ${data.total_credits}`);
+        await refreshCreditsForWallet(wallet);
+      } catch (e) {
+        setAIPacksStatus(e.message || "Purchase failed", true);
+      } finally {
+        if (btnEl) { btnEl.disabled = false; btnEl.textContent = original || "Buy with THR"; }
+      }
+    }
+
+    async function openAIPacksModal() {
+      if (!aiPacksModalEl) return;
+      const wallet = walletInputEl.value.trim();
+      aiPacksModalEl.style.display = "flex";
+      aiPacksWalletInfoEl.textContent = wallet
+        ? `Bound wallet: ${wallet}${Number.isFinite(window.aiCredits) ? ` • AI Credits: ${window.aiCredits}` : ""}`
+        : "Δώσε πρώτα THR wallet στη Quantum Chat για να αγοράσεις credits.";
+      setAIPacksStatus("");
+      aiPacksListEl.innerHTML = "Loading packs…";
+
+      try {
+        const res = await fetch(API_AI_PACKS);
+        const data = await res.json();
+        const packs = Array.isArray(data.packs) ? data.packs : [];
+        aiPacksListEl.innerHTML = "";
+        packs.forEach((p) => {
+          const row = document.createElement("div");
+          row.style.cssText = "display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid #1a3b2e; border-radius:10px; padding:10px; background:rgba(0,255,102,.05);";
+          const info = document.createElement("div");
+          info.innerHTML = `<strong>${p.title || p.code}</strong><div style="font-size:12px;color:#7aa398">Credits: ${p.credits} • Price: ${p.price_thr} THR</div>`;
+          const btn = document.createElement("button");
+          btn.className = "btn-ghost";
+          btn.type = "button";
+          btn.textContent = "Buy with THR";
+          if (!wallet) btn.disabled = true;
+          btn.addEventListener("click", () => buyAIPack(p.code, btn));
+          row.appendChild(info);
+          row.appendChild(btn);
+          aiPacksListEl.appendChild(row);
+        });
+      } catch (e) {
+        aiPacksListEl.innerHTML = "";
+        setAIPacksStatus(`Failed to load packs: ${e.message}`, true);
+      }
+    }
+
+    function closeAIPacksModal() {
+      if (aiPacksModalEl) aiPacksModalEl.style.display = "none";
+    }
+
+
+    const CHAT_TRANSLATIONS = {
+      chat: {
+        wallet: { en: "THR wallet", gr: "THR wallet", ja: "THRウォレット", es: "Billetera THR", ru: "THR кошелёк" },
+        bound_wallet: { en: "Bound wallet:", gr: "Συνδεδεμένο wallet:", ja: "接続ウォレット:", es: "Wallet vinculada:", ru: "Привязанный кошелёк:" },
+        ai_packs: { en: "💳 AI Packs", gr: "💳 AI Packs", ja: "💳 AIパック", es: "💳 Packs AI", ru: "💳 AI Пакеты" },
+      }
+    };
+
+    function normalizeLang(value) {
+      const v = String(value || "").toLowerCase().trim();
+      if (v === "el") return "gr";
+      return ["gr", "en", "ja", "es", "ru"].includes(v) ? v : "en";
+    }
+
+    const LANG_KEY = "thr_lang";
+
+    function applyTranslations(langOverride) {
+      const lang = normalizeLang(langOverride || localStorage.getItem(LANG_KEY) || "en");
+      localStorage.setItem(LANG_KEY, lang);
+      if (chatLanguageSelectEl) chatLanguageSelectEl.value = lang;
+      document.querySelectorAll("[data-i18n]").forEach((el) => {
+        const key = el.dataset.i18n || "";
+        const [scope, token] = key.split(".");
+        const val = CHAT_TRANSLATIONS?.[scope]?.[token]?.[lang];
+        if (val) el.textContent = val;
+      });
+    }
+
+
+    async function refreshVoiceDeviceStatus() {
+      if (!voiceDeviceStatusEl) return;
+      try {
+        const res = await fetch(API_X9_STATUS);
+        const data = await res.json();
+        const active = !!(res.ok && data && data.ok && data.mode === "x9");
+        voiceDeviceStatusEl.textContent = active ? "device active" : "no device";
+        voiceDeviceStatusEl.style.color = active ? "#00ff66" : "#ff4b81";
+      } catch (_) {
+        voiceDeviceStatusEl.textContent = "no device";
+        voiceDeviceStatusEl.style.color = "#ff4b81";
+      }
+    }
+
+    // --- Events ---
+    function bindEvents() {
+      document
+        .getElementById("newSessionBtn")
+        .addEventListener("click", () => createSession());
+      document
+        .getElementById("renameSessionBtn")
+        .addEventListener("click", renameSession);
+      document
+        .getElementById("deleteSelectedBtn")
+        .addEventListener("click", deleteSelectedSessions);
+
+      if (cleanSessionsBtnEl) {
+        cleanSessionsBtnEl.addEventListener("click", pruneSessions);
+      }
+
+      if (openAIPacksBtnEl) openAIPacksBtnEl.addEventListener("click", openAIPacksModal);
+      if (chatLanguageSelectEl) chatLanguageSelectEl.addEventListener("change", (e) => applyTranslations(e.target.value));
+      if (closeAIPacksBtnEl) closeAIPacksBtnEl.addEventListener("click", closeAIPacksModal);
+
+      fileInputEl.addEventListener("change", (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length) {
+          uploadFiles(files);
+        }
+        fileInputEl.value = "";
+      });
+
+      if (modelSelectEl) {
+        modelSelectEl.addEventListener("change", (e) => {
+          const selected = e.target.value || defaultModelId;
+          const meta = modelMetaById.get(selected) || {};
+          if (meta.enabled === false || meta.degraded === true) {
+            showDegradedModeNotice(`Model '${selected}' is degraded${meta.health_reason ? ` (${meta.health_reason})` : ""}`);
+          } else {
+            hideDegradedModeNotice();
+          }
+          pendingModelSelection = selected;
+          persistModelSelection(selected);
+        });
+      }
+
+      clearPendingBtnEl.addEventListener("click", () => {
+        pendingFiles = [];
+        renderPendingFiles();
+      });
+
+      window.addEventListener("storage", (e) => {
+        if (e.key === 'thr_address' || e.key === 'wallet_bound') {
+          loadWallet();
+        }
+      });
+
+      sendBtnEl.addEventListener("click", () => {
+        sendMessage();
+      });
+
+      messageInputEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        // Escape closes modal
+        if (e.key === "Escape" && aiPacksModalEl && aiPacksModalEl.style.display !== "none") closeAIPacksModal();
+      });
+
+      // Save selected model to localStorage when it changes
+      modelSelectEl.addEventListener("change", () => {
+        const selectedModel = modelSelectEl.value;
+        if (selectedModel) {
+          localStorage.setItem(SELECTED_MODEL_KEY, selectedModel);
+        }
+      });
+    }
+
+    // --- Init ---
+    async function init() {
+      cacheDom();
+      initAdminAccess();
+      bindEvents();
+      applyTranslations();
+      await loadModels();
+      await loadWallet();
+
+      // Hydrate cached data first for instant UI, then validate against server.
+      // This order ensures: (1) user sees cached chat immediately,
+      // (2) loadSessions re-validates with server and corrects stale state.
+      hydrateSessionCache();
+      await loadSessions();
+
+      // After server validation, persist the authoritative state so the next
+      // refresh picks up correct session_id + wallet + messages.
+      if (currentSessionId) {
+        localStorage.setItem(ACTIVE_SESSION_KEY, currentSessionId);
+      }
+      persistSessionCache();
+
+      loadTelemetry();
+      await refreshVoiceDeviceStatus();
+      telemetryInterval = setInterval(() => {
+        loadTelemetry();
+        refreshVoiceDeviceStatus();
+      }, 15000);
+      setSending(true);
+    }
+
+    let telemetryInterval = null;
+
+    document.addEventListener("DOMContentLoaded", init);
+
+    window.addEventListener("beforeunload", () => {
+      if (telemetryInterval) {
+        clearInterval(telemetryInterval);
+        telemetryInterval = null;
+      }
+    });
+  </script>
+</body>
+</html>

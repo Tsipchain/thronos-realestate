@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Thronos AI Architect</title>
+  <style>
+    :root {
+      --bg: #050a07;
+      --panel: #071810;
+      --accent: #00ff66;
+      --accent-soft: rgba(0, 255, 102, 0.1);
+      --text: #c8ffd8;
+      --muted: #7aa398;
+      --border: #1a3b2e;
+      --danger: #ff4b81;
+      --purple: #b366ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #050a07 0%, #0a1810 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* Language visibility */
+    .lang-en, .lang-ja, .lang-ru, .lang-es { display: none; }
+    body.lang-en .lang-el { display: none; }
+    body.lang-en .lang-en { display: inline; }
+    body.lang-ja .lang-el { display: none; }
+    body.lang-ja .lang-ja { display: inline; }
+    body.lang-ru .lang-el { display: none; }
+    body.lang-ru .lang-ru { display: inline; }
+    body.lang-es .lang-el { display: none; }
+    body.lang-es .lang-es { display: inline; }
+
+    .top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(7, 24, 16, 0.95), rgba(5, 10, 7, 0.98));
+      backdrop-filter: blur(10px);
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: var(--accent);
+      box-shadow: 0 0 15px rgba(0, 255, 102, 0.3);
+    }
+
+    .logo-text {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+    }
+
+    .pill {
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      padding: 6px 14px;
+      color: var(--accent);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    select, textarea, input, button {
+      background: rgba(7, 20, 13, 0.9);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    select:focus, textarea:focus, input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .wrap {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      min-height: calc(100vh - 70px);
+    }
+
+    @media (max-width: 900px) {
+      .wrap {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .left {
+      border-right: 1px solid var(--border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: rgba(7, 24, 16, 0.3);
+    }
+
+    .right {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    textarea {
+      min-height: 200px;
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.5;
+    }
+
+    .generate-btn {
+      background: linear-gradient(135deg, var(--accent) 0%, #00cc55 100%);
+      color: #000;
+      border: none;
+      padding: 16px 24px;
+      font-size: 15px;
+      letter-spacing: 0.1em;
+      box-shadow: 0 0 20px rgba(0, 255, 102, 0.3);
+    }
+
+    .generate-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 30px rgba(0, 255, 102, 0.5);
+    }
+
+    .generate-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    pre {
+      background: linear-gradient(135deg, rgba(7, 17, 10, 0.95), rgba(5, 10, 7, 0.98));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      white-space: pre-wrap;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      flex: 1;
+      overflow-y: auto;
+      min-height: 400px;
+      max-height: calc(100vh - 250px);
+    }
+
+    .files-output {
+      background: rgba(179, 102, 255, 0.1);
+      border: 1px solid var(--purple);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 12px;
+      color: var(--purple);
+    }
+
+    .tip-box {
+      background: var(--accent-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .tip-box strong {
+      color: var(--accent);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .input-row input {
+      flex: 1;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .status-indicator.online { color: var(--accent); }
+    .status-indicator.offline { color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="logo">
+      <div class="logo-icon">🏗️</div>
+      <div class="logo-text">AI ARCHITECT</div>
+    </div>
+    <div class="pill" id="statusPill">
+      <span id="architectSessionType" style="margin-right:8px; font-weight:700;">Session: ARCHITECT</span>
+      <div class="pill-dot"></div>
+      <span class="lang-el">Online</span>
+      <span class="lang-en">Online</span>
+      <span class="lang-ja">オンライン</span>
+      <span class="lang-ru">Онлайн</span>
+      <span class="lang-es">En línea</span>
+    </div>
+    <div class="input-row">
+      <span class="section-title" style="margin: 0;">Wallet</span>
+      <input id="wallet" placeholder="THR..." style="width: 200px"/>
+    </div>
+    <div class="input-row">
+      <span class="section-title" style="margin: 0;">Model</span>
+      <select id="model">
+        <option value="auto">🔀 Auto (Pythia chooses)</option>
+      </select>
+      <small id="architectModelWarning" style="display:none;color:#ff7a7a;"></small>
+    </div>
+    <div class="input-row" style="margin-left:auto;">
+      <span class="section-title" style="margin: 0;"><img src="/static/img/logo.png" alt="Language" style="width:14px;height:14px;vertical-align:middle;" onerror="this.style.display='none'"> 🌐</span>
+      <select id="architectLanguageSelect" style="width: 150px;">
+        <option value="gr">Ελληνικά</option>
+        <option value="en">English</option>
+        <option value="ja">日本語</option>
+        <option value="ru">Русский</option>
+        <option value="es">Español</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="left">
+      <div class="input-group">
+        <div class="section-title">
+          📋 <span class="lang-el">Επιλογή Blueprint</span>
+          <span class="lang-en">Select Blueprint</span>
+          <span class="lang-ja">ブループリント選択</span>
+          <span class="lang-ru">Выбрать шаблон</span>
+          <span class="lang-es">Seleccionar Blueprint</span>
+        </div>
+        <select id="blueprint"></select>
+      </div>
+
+      <div class="input-group">
+        <div class="section-title">
+          ✏️ <span class="lang-el">Προδιαγραφές (Προαιρετικό)</span>
+          <span class="lang-en">Custom Specifications (Optional)</span>
+          <span class="lang-ja">カスタム仕様（オプション）</span>
+          <span class="lang-ru">Спецификации (Необяз.)</span>
+          <span class="lang-es">Especificaciones (Opcional)</span>
+        </div>
+        <textarea id="spec" placeholder="π.χ. Θέλω login, dashboard, billing, admin panel, API endpoints για users..."></textarea>
+      </div>
+
+      <button class="generate-btn" id="generate">
+        🚀 <span class="lang-el">ΔΗΜΙΟΥΡΓΙΑ ΑΡΧΙΤΕΚΤΟΝΙΚΗΣ</span>
+        <span class="lang-en">GENERATE ARCHITECTURE</span>
+        <span class="lang-ja">アーキテクチャ生成</span>
+        <span class="lang-ru">СОЗДАТЬ АРХИТЕКТУРУ</span>
+        <span class="lang-es">GENERAR ARQUITECTURA</span>
+      </button>
+
+      <div class="tip-box">
+        <strong>💡 Tip:</strong>
+        <span class="lang-el">Τα blueprints φορτώνονται από /app/data/ai_blueprints. Μπορείτε να δημιουργήσετε δικά σας templates!</span>
+        <span class="lang-en">Blueprints are loaded from /app/data/ai_blueprints. You can create your own templates!</span>
+        <span class="lang-ja">ブループリントは/app/data/ai_blueprintsから読み込まれます。独自のテンプレートを作成できます！</span>
+        <span class="lang-ru">Шаблоны загружаются из /app/data/ai_blueprints. Вы можете создавать свои!</span>
+        <span class="lang-es">Los blueprints se cargan desde /app/data/ai_blueprints. ¡Puedes crear los tuyos!</span>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="section-title">
+        📜 <span class="lang-el">Αποτέλεσμα Architect</span>
+        <span class="lang-en">Architect Output Log</span>
+        <span class="lang-ja">Architectの出力ログ</span>
+        <span class="lang-ru">Журнал вывода Architect</span>
+        <span class="lang-es">Registro de Salida</span>
+      </div>
+      <pre id="out">// <span class="lang-el">Το αποτέλεσμα θα εμφανιστεί εδώ...</span><span class="lang-en">Generation output will appear here...</span><span class="lang-ja">生成結果がここに表示されます...</span><span class="lang-ru">Результат генерации появится здесь...</span><span class="lang-es">El resultado aparecerá aquí...</span></pre>
+      <div class="files-output" id="files" style="display: none;"></div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <button id="downloadZipBtn" class="generate-btn" style="display: none; padding: 10px 16px;">⬇️ Download ZIP</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const downloadZipBtn = document.getElementById("downloadZipBtn");
+const ARCHITECT_SESSION_KEY = "thronos_architect_session_id";
+const ARCHITECT_WALLET_KEY = "thr_address";
+const ARCHITECT_MODEL_KEY = "thronos_architect_model";
+let architectSessionId = localStorage.getItem(ARCHITECT_SESSION_KEY) || "";
+
+function resetDownloadBtn() {
+  if (!downloadZipBtn) return;
+  downloadZipBtn.disabled = true;
+  downloadZipBtn.style.display = "none";
+  downloadZipBtn.removeAttribute("data-url");
+}
+
+function enableDownloadBtn(url) {
+  if (!downloadZipBtn || !url) return;
+  downloadZipBtn.dataset.url = url;
+  downloadZipBtn.disabled = false;
+  downloadZipBtn.style.display = "inline-flex";
+}
+
+if (downloadZipBtn) {
+  downloadZipBtn.addEventListener("click", () => {
+    const url = downloadZipBtn.dataset.url;
+    if (url) {
+      window.location.href = url;
+    }
+  });
+}
+
+// Language support (shared key with Chat)
+const DEFAULT_LANG = 'en';
+const LANG_KEY = 'thr_lang';
+const LANG_SEQUENCE = ['gr', 'en', 'ja', 'es', 'ru'];
+const LANG_CLASS_MAP = { 'gr': 'lang-el', 'en': 'lang-en', 'ja': 'lang-ja', 'es': 'lang-es', 'ru': 'lang-ru' };
+const TRANSLATIONS_CACHE = window.TRANSLATIONS_CACHE || {};
+
+function normalizeLang(lang) {
+  const val = String(lang || '').toLowerCase();
+  if (val === 'el') return 'gr';
+  return LANG_SEQUENCE.includes(val) ? val : DEFAULT_LANG;
+}
+
+function applyTranslations(lang) {
+  const normalized = normalizeLang(lang || localStorage.getItem(LANG_KEY) || DEFAULT_LANG);
+  localStorage.setItem(LANG_KEY, normalized);
+  document.body.classList.remove(...Object.values(LANG_CLASS_MAP));
+  if (LANG_CLASS_MAP[normalized]) document.body.classList.add(LANG_CLASS_MAP[normalized]);
+  const sel = document.getElementById('architectLanguageSelect');
+  if (sel) sel.value = normalized;
+  try {
+    document.querySelectorAll('[data-i18n]').forEach((node) => {
+      const key = node.dataset.i18n;
+      const t = (TRANSLATIONS_CACHE[normalized] && TRANSLATIONS_CACHE[normalized][key])
+        || (TRANSLATIONS_CACHE.en && TRANSLATIONS_CACHE.en[key])
+        || null;
+      if (t) node.textContent = t;
+    });
+  } catch (err) {
+    console.warn('applyTranslations failed', err);
+  }
+  return normalized;
+}
+
+function initArchitectLanguage() {
+  if (window.__architectLangInitDone) return;
+  window.__architectLangInitDone = true;
+  const sel = document.getElementById('architectLanguageSelect');
+  if (!sel) return;
+  let lang = localStorage.getItem(LANG_KEY) || DEFAULT_LANG;
+  if (![...sel.options].some((o) => o.value === lang)) {
+    lang = DEFAULT_LANG;
+  }
+  sel.value = lang;
+  try {
+    applyTranslations(lang);
+  } catch (err) {
+    console.warn('initial applyTranslations failed', err);
+  }
+  sel.addEventListener('change', (e) => {
+    try {
+      const newLang = normalizeLang(e.target.value);
+      localStorage.setItem(LANG_KEY, newLang);
+      applyTranslations(newLang);
+    } catch (err) {
+      console.warn('language switch failed', err);
+    }
+  });
+}
+
+async function api(url, opts) {
+  const r = await fetch(url, opts);
+  const t = await r.text();
+  let j = null;
+  try { j = JSON.parse(t); } catch(e) {}
+  if (!r.ok) {
+    throw new Error((j && (j.error || j.message)) || t || ("HTTP " + r.status));
+  }
+  return j;
+}
+
+function setStatus(ok, text) {
+  const pill = $("statusPill");
+  const dot = pill.querySelector('.pill-dot');
+  dot.style.background = ok ? "var(--accent)" : "var(--danger)";
+  dot.style.boxShadow = ok ? "0 0 8px var(--accent)" : "0 0 8px var(--danger)";
+}
+
+
+function updateArchitectSessionBadge() {
+  const badge = $("architectSessionType");
+  if (!badge) return;
+  const suffix = architectSessionId ? ` #${architectSessionId.slice(0, 10)}` : "";
+  badge.textContent = `Session: ARCHITECT${suffix}`;
+}
+
+async function ensureArchitectSession(wallet) {
+  const payload = {
+    session_type: "architect",
+    wallet: wallet || null,
+    session_id: architectSessionId || undefined,
+    title: "Architect Session",
+  };
+  try {
+    const res = await fetch('/api/sessions/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    architectSessionId = data.session_id || (data.session && data.session.id) || architectSessionId || "";
+  } catch (err) {
+    console.warn('ensureArchitectSession fallback:', err);
+    architectSessionId = architectSessionId || `arch_local_${Date.now().toString(36)}`;
+  }
+  if (architectSessionId) {
+    localStorage.setItem(ARCHITECT_SESSION_KEY, architectSessionId);
+  }
+  updateArchitectSessionBadge();
+}
+
+async function loadBlueprints() {
+  const j = await api("/api/ai_blueprints");
+  const list = j.blueprints || [];
+  const sel = $("blueprint");
+  sel.innerHTML = "";
+
+  if (!list.length) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No blueprints found";
+    sel.appendChild(opt);
+    return;
+  }
+
+  list.forEach(b => {
+    const opt = document.createElement("option");
+    opt.value = b;
+    opt.textContent = "📁 " + b;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadModels() {
+  const sel = $("model");
+  const warning = $("architectModelWarning");
+  const modelMetaById = {};
+  if (!sel) return;
+  const previous = sel.value || 'auto';
+  sel.innerHTML = '<option value="auto">🔀 Auto (Thronos chooses)</option>';
+  try {
+    const j = await api('/api/ai_models');
+    const models = Array.isArray(j.models) ? j.models : [];
+    models.forEach((m) => {
+      if (!m || !m.id || m.id === 'auto') return;
+      modelMetaById[m.id] = m;
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = `${m.display_name || m.label || m.id}${m.degraded ? ` (degraded${m.health_reason ? `: ${m.health_reason}` : ''})` : ''}`;
+      opt.disabled = m.enabled === false;
+      if (m.enabled === false) opt.style.color = '#999';
+      sel.appendChild(opt);
+    });
+  } catch (e) {
+    console.warn('loadModels failed', e);
+  }
+  const saved = localStorage.getItem(ARCHITECT_MODEL_KEY);
+  const target = saved || previous;
+  sel.value = [...sel.options].some((o) => o.value === target) ? target : 'auto';
+  sel.addEventListener('change', () => {
+    localStorage.setItem(ARCHITECT_MODEL_KEY, sel.value || 'auto');
+    const selected = sel.options[sel.selectedIndex];
+    const meta = modelMetaById[sel.value] || {};
+    if (selected && (selected.disabled || meta.degraded === true || meta.enabled === false)) {
+      warning.style.display = 'block';
+      warning.textContent = `Selected model is unavailable/degraded${meta.health_reason ? ` (${meta.health_reason})` : ''}. Please choose another model.`;
+    } else {
+      warning.style.display = 'none';
+      warning.textContent = '';
+    }
+  });
+}
+
+function parseFiles(lines) {
+  return (lines || []).map(f => `📄 ${f.filename} (${f.size} bytes)`).join("\n");
+}
+
+$("generate").onclick = async () => {
+  const blueprint = $("blueprint").value;
+  const spec = $("spec").value.trim();
+  const wallet = $("wallet").value.trim() || localStorage.getItem('thr_address') || '';
+  const model = $("model").value.trim();
+
+  if (!blueprint) {
+    alert("Please select a blueprint.");
+    return;
+  }
+  if (!spec) {
+    alert("Please enter specifications.");
+    return;
+  }
+
+  const btn = $("generate");
+  btn.disabled = true;
+  btn.innerHTML = "⏳ Generating...";
+
+  $("out").textContent = "🔄 Generating architecture...\n\nPlease wait while Pythia analyzes your specifications...";
+  $("files").style.display = "none";
+  $("files").textContent = "";
+  lastArchitectFiles = [];
+  resetDownloadBtn();
+
+  try {
+    const j = await api("/api/architect_generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wallet, blueprint, spec, model, session_id: architectSessionId || undefined })
+    });
+
+    setStatus(true);
+    $("out").textContent = j.response || "No response received.";
+
+    if (j.files && j.files.length) {
+      $("files").style.display = "block";
+      $("files").innerHTML = "<strong>📁 Generated Files:</strong><br>" + parseFiles(j.files);
+    }
+
+    // Show THR cost and T2E earned
+    if (j.cost_thr || j.earned_t2e) {
+      const costInfo = document.createElement('div');
+      costInfo.style.cssText = 'margin-top:12px;padding:12px 16px;background:#1a0f2e;border:1px solid #3d2066;border-radius:8px;color:#d7ffe6;';
+      let html = '';
+      if (j.cost_thr) html += `<span style="color:#FF6B6B;">-${j.cost_thr} THR</span> `;
+      if (j.earned_t2e) html += `<span style="color:#3CFF7A;">+${j.earned_t2e} T2E</span> `;
+      if (j.t2e_multiplier) html += `<span style="opacity:0.6;">(${j.t2e_multiplier}x multiplier)</span>`;
+      costInfo.innerHTML = html;
+      $("files").parentElement.insertBefore(costInfo, $("files").nextSibling);
+    }
+
+    // Show "Continue in Chat" button for further development
+    if (j.session_id) {
+      const chatBtn = document.createElement('button');
+      chatBtn.className = 'btn-primary';
+      chatBtn.style.cssText = 'margin-top:12px;';
+      chatBtn.innerHTML = '💬 <span class="lang-el">Συνέχεια στο Chat</span><span class="lang-en">Continue in Chat</span>';
+      chatBtn.onclick = () => {
+        localStorage.setItem('thronos_ai_active_session', j.session_id);
+        window.location.href = '/chat';
+      };
+      $("files").parentElement.insertBefore(chatBtn, $("files").nextSibling?.nextSibling || null);
+    }
+
+    if (j.zip_url) {
+      enableDownloadBtn(j.zip_url);
+    } else {
+      resetDownloadBtn();
+    }
+  } catch(e) {
+    setStatus(false);
+    $("out").textContent = "❌ Error: " + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🚀 <span class="lang-el">ΔΗΜΙΟΥΡΓΙΑ ΑΡΧΙΤΕΚΤΟΝΙΚΗΣ</span><span class="lang-en">GENERATE ARCHITECTURE</span><span class="lang-ja">アーキテクチャ生成</span><span class="lang-ru">СОЗДАТЬ АРХИТЕКТУРУ</span><span class="lang-es">GENERAR ARQUITECTURA</span>';
+    applyTranslations();
+  }
+};
+
+// Load wallet from localStorage
+const savedWallet = localStorage.getItem(ARCHITECT_WALLET_KEY);
+if (savedWallet) {
+  $("wallet").value = savedWallet;
+}
+updateArchitectSessionBadge();
+
+// Initialize
+document.addEventListener('DOMContentLoaded', async () => {
+  if (window.__architectInitDone) return;
+  window.__architectInitDone = true;
+  try {
+    initArchitectLanguage();
+    await loadModels();
+    await loadBlueprints();
+    const wallet = $("wallet").value.trim() || localStorage.getItem(ARCHITECT_WALLET_KEY) || '';
+    if (wallet) {
+      $("wallet").value = wallet;
+      localStorage.setItem(ARCHITECT_WALLET_KEY, wallet);
+    }
+    await ensureArchitectSession(wallet);
+    $("wallet").addEventListener('change', async () => {
+      const nextWallet = $("wallet").value.trim();
+      if (nextWallet) localStorage.setItem(ARCHITECT_WALLET_KEY, nextWallet);
+      await ensureArchitectSession(nextWallet);
+    });
+    setStatus(true);
+  } catch(e) {
+    setStatus(false);
+    console.error("Failed to initialize architect:", e);
+  }
+});
+</script>
+</body>
+</html>

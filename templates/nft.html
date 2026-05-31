@@ -1,0 +1,825 @@
+{% extends "base.html" %}
+
+{% block title %}🎨 NFT Marketplace - Thronos{% endblock %}
+
+{% block styles %}
+<style>
+    .nft-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .nft-header {
+        text-align: center;
+        padding: 40px 30px;
+        background: linear-gradient(135deg, #1a0a2e 0%, #0f1a2e 50%, #071510 100%);
+        border: 1px solid #5C3D99;
+        border-radius: 16px;
+        margin-bottom: 30px;
+    }
+    .nft-header h1 {
+        color: #B366FF;
+        font-size: 2.5em;
+        margin: 0;
+        text-shadow: 0 0 20px rgba(179, 102, 255, 0.4);
+    }
+    .nft-header p {
+        color: #d7ffe6;
+        opacity: 0.9;
+        margin-top: 10px;
+    }
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    .stat-card {
+        background: #0f0a1a;
+        border: 1px solid #3d2066;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+    }
+    .stat-card .value {
+        color: #B366FF;
+        font-size: 1.8em;
+        font-weight: bold;
+    }
+    .stat-card .label {
+        color: #d7ffe6;
+        opacity: 0.8;
+        margin-top: 5px;
+        font-size: 0.9em;
+    }
+    .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    .tab-btn {
+        padding: 12px 20px;
+        border: 1px solid #3d2066;
+        background: #0f0a1a;
+        color: #d7ffe6;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .tab-btn:hover {
+        border-color: #B366FF;
+    }
+    .tab-btn.active {
+        background: #B366FF;
+        color: #000;
+        border-color: #B366FF;
+    }
+    .section {
+        background: #0f0a1a;
+        border: 1px solid #3d2066;
+        border-radius: 14px;
+        padding: 25px;
+        margin-bottom: 25px;
+    }
+    .section h2 {
+        color: #B366FF;
+        margin: 0 0 20px 0;
+        border-bottom: 1px solid #3d2066;
+        padding-bottom: 10px;
+    }
+    .nft-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    .nft-card {
+        background: #1a0f2e;
+        border: 1px solid #3d2066;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    .nft-card:hover {
+        border-color: #B366FF;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(179, 102, 255, 0.3);
+    }
+    .nft-image {
+        width: 100%;
+        height: 200px;
+        background: #2a1a4a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4em;
+        overflow: hidden;
+    }
+    .nft-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .nft-info {
+        padding: 15px;
+    }
+    .nft-title {
+        color: #d7ffe6;
+        font-weight: bold;
+        font-size: 1.1em;
+        margin-bottom: 5px;
+    }
+    .nft-creator {
+        color: #B366FF;
+        font-size: 0.85em;
+        margin-bottom: 10px;
+    }
+    .nft-price {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 10px;
+        border-top: 1px solid #3d2066;
+    }
+    .nft-price .label {
+        color: #888;
+        font-size: 0.85em;
+    }
+    .nft-price .value {
+        color: #3CFF7A;
+        font-weight: bold;
+    }
+    .btn-primary {
+        padding: 12px 20px;
+        border-radius: 8px;
+        border: 1px solid #B366FF;
+        background: #1a0f2e;
+        color: #B366FF;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s;
+        width: 100%;
+        margin-top: 10px;
+    }
+    .btn-primary:hover {
+        background: #B366FF;
+        color: #000;
+    }
+    .btn-secondary {
+        background: #0f0a1a;
+        border-color: #3d2066;
+        color: #d7ffe6;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        display: block;
+        color: #B366FF;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #3d2066;
+        background: #1a0f2e;
+        color: #d7ffe6;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+        outline: none;
+        border-color: #B366FF;
+    }
+    .upload-area {
+        border: 2px dashed #3d2066;
+        border-radius: 12px;
+        padding: 40px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .upload-area:hover {
+        border-color: #B366FF;
+        background: rgba(179, 102, 255, 0.05);
+    }
+    .upload-area.has-file {
+        border-color: #3CFF7A;
+        background: rgba(60, 255, 122, 0.05);
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 3000;
+        overflow-y: auto;
+        padding: 20px;
+    }
+    .modal.active {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+    }
+    .modal-content {
+        background: #0f0a1a;
+        border: 1px solid #3d2066;
+        border-radius: 16px;
+        padding: 30px;
+        max-width: 500px;
+        width: 100%;
+        margin: 40px auto;
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .modal-header h2 {
+        color: #B366FF;
+        margin: 0;
+    }
+    .modal-close {
+        background: none;
+        border: none;
+        color: #ff6b6b;
+        font-size: 24px;
+        cursor: pointer;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        opacity: 0.6;
+    }
+    .empty-state .icon {
+        font-size: 4em;
+        margin-bottom: 15px;
+    }
+    .filter-bar {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    .filter-bar select {
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 1px solid #3d2066;
+        background: #1a0f2e;
+        color: #d7ffe6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="nft-container">
+    <!-- Header -->
+    <div class="nft-header">
+        <h1>🎨 NFT Marketplace</h1>
+        <p>
+            <span class="lang-el">Δημιουργήστε, αγοράστε και πουλήστε NFTs στο δίκτυο Thronos</span>
+            <span class="lang-en">Create, buy and sell NFTs on the Thronos network</span>
+            <span class="lang-ja">ThronosネットワークでNFTを作成、購入、販売</span>
+            <span class="lang-ru">Создавайте, покупайте и продавайте NFT в сети Thronos</span>
+            <span class="lang-es">Crea, compra y vende NFTs en la red Thronos</span>
+        </p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="value" id="totalNFTs">0</div>
+            <div class="label"><span class="lang-el">Συνολικά NFTs</span><span class="lang-en">Total NFTs</span><span class="lang-ja">総NFT数</span><span class="lang-ru">Всего NFT</span><span class="lang-es">Total NFTs</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="totalCollections">0</div>
+            <div class="label"><span class="lang-el">Συλλογές</span><span class="lang-en">Collections</span><span class="lang-ja">コレクション</span><span class="lang-ru">Коллекции</span><span class="lang-es">Colecciones</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="totalVolume">0</div>
+            <div class="label"><span class="lang-el">Συνολικός Όγκος</span><span class="lang-en">Total Volume</span><span class="lang-ja">総取引量</span><span class="lang-ru">Общий объём</span><span class="lang-es">Volumen Total</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="floorPrice">0</div>
+            <div class="label"><span class="lang-el">Floor Price</span><span class="lang-en">Floor Price</span><span class="lang-ja">フロア価格</span><span class="lang-ru">Мин. цена</span><span class="lang-es">Precio Mínimo</span></div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('marketplace')">
+            🏪 <span class="lang-el">Αγορά</span><span class="lang-en">Marketplace</span><span class="lang-ja">マーケット</span><span class="lang-ru">Маркетплейс</span><span class="lang-es">Mercado</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('my-nfts')">
+            🖼️ <span class="lang-el">Τα NFTs μου</span><span class="lang-en">My NFTs</span><span class="lang-ja">マイNFT</span><span class="lang-ru">Мои NFT</span><span class="lang-es">Mis NFTs</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('create')">
+            ➕ <span class="lang-el">Δημιουργία</span><span class="lang-en">Create</span><span class="lang-ja">作成</span><span class="lang-ru">Создать</span><span class="lang-es">Crear</span>
+        </button>
+    </div>
+
+    <!-- Marketplace Tab -->
+    <div id="marketplace-tab" class="section tab-content active">
+        <h2>🏪 <span class="lang-el">Διαθέσιμα NFTs</span><span class="lang-en">Available NFTs</span><span class="lang-ja">利用可能なNFT</span><span class="lang-ru">Доступные NFT</span><span class="lang-es">NFTs Disponibles</span></h2>
+
+        <div class="filter-bar">
+            <select id="sortBy" onchange="loadNFTs()">
+                <option value="recent"><span class="lang-el">Πρόσφατα</span><span class="lang-en">Recent</span></option>
+                <option value="price_low">Price: Low to High</option>
+                <option value="price_high">Price: High to Low</option>
+            </select>
+            <select id="category" onchange="loadNFTs()">
+                <option value="all"><span class="lang-el">Όλες οι κατηγορίες</span><span class="lang-en">All Categories</span></option>
+                <option value="art">🎨 Art</option>
+                <option value="music">🎵 Music</option>
+                <option value="gaming">🎮 Gaming</option>
+                <option value="collectibles">💎 Collectibles</option>
+            </select>
+        </div>
+
+        <div id="nftGrid" class="nft-grid"></div>
+    </div>
+
+    <!-- My NFTs Tab -->
+    <div id="my-nfts-tab" class="section tab-content" style="display: none;">
+        <h2>🖼️ <span class="lang-el">Τα NFTs μου</span><span class="lang-en">My NFTs</span></h2>
+        <div id="myNFTsGrid" class="nft-grid">
+            <div class="empty-state">
+                <div class="icon">🔌</div>
+                <p><span class="lang-el">Συνδέστε το πορτοφόλι σας για να δείτε τα NFTs σας</span><span class="lang-en">Connect your wallet to see your NFTs</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Tab -->
+    <div id="create-tab" class="section tab-content" style="display: none;">
+        <h2>➕ <span class="lang-el">Δημιουργία NFT</span><span class="lang-en">Create NFT</span></h2>
+
+        <div class="form-group">
+            <label><span class="lang-el">Εικόνα NFT</span><span class="lang-en">NFT Image</span></label>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('nftImage').click()">
+                <input type="file" id="nftImage" accept="image/*" style="display: none;" onchange="previewImage(this)">
+                <div id="uploadPreview">
+                    <span style="font-size: 3em;">📁</span>
+                    <p><span class="lang-el">Κάντε κλικ για ανέβασμα ή σύρετε εδώ</span><span class="lang-en">Click to upload or drag and drop</span></p>
+                    <p style="font-size: 0.85em; opacity: 0.7;">PNG, JPG, GIF (max 10MB)</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label><span class="lang-el">Όνομα</span><span class="lang-en">Name</span></label>
+            <input type="text" id="nftName" placeholder="My Amazing NFT">
+        </div>
+
+        <div class="form-group">
+            <label><span class="lang-el">Περιγραφή</span><span class="lang-en">Description</span></label>
+            <textarea id="nftDescription" rows="3" placeholder="Describe your NFT..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label><span class="lang-el">Κατηγορία</span><span class="lang-en">Category</span></label>
+            <select id="nftCategory">
+                <option value="art">🎨 Art</option>
+                <option value="music">🎵 Music</option>
+                <option value="gaming">🎮 Gaming</option>
+                <option value="collectibles">💎 Collectibles</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label><span class="lang-el">Τιμή (THR)</span><span class="lang-en">Price (THR)</span></label>
+            <input type="number" id="nftPrice" step="0.01" placeholder="10">
+        </div>
+
+        <div class="form-group">
+            <label><span class="lang-el">Royalties (%)</span><span class="lang-en">Royalties (%)</span></label>
+            <input type="number" id="nftRoyalties" value="10" min="0" max="50">
+        </div>
+
+        <button class="btn-primary" onclick="mintNFT()">
+            🎨 <span class="lang-el">Δημιουργία NFT</span><span class="lang-en">Mint NFT</span>
+        </button>
+    </div>
+</div>
+
+<!-- Buy Modal -->
+<div id="buyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🛒 <span class="lang-el">Αγορά NFT</span><span class="lang-en">Buy NFT</span></h2>
+            <button class="modal-close" onclick="closeBuyModal()">×</button>
+        </div>
+        <div id="buyModalContent"></div>
+    </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let nfts = [];
+let connectedWallet = getNftActiveWalletAddress();
+
+
+function getNftActiveWalletAddress() {
+    if (typeof window.getActiveWalletAddress === 'function') return window.getActiveWalletAddress() || '';
+    if (window.walletSession && typeof walletSession.getActiveAddress === 'function') return walletSession.getActiveAddress() || '';
+    if (window.walletSession && typeof walletSession.getAddress === 'function') return walletSession.getAddress() || '';
+    return localStorage.getItem('thr_address') || '';
+}
+
+async function requireNftWalletAuth(txCore) {
+    if (!window.WalletAuth || typeof WalletAuth.requireUnlockedWallet !== 'function') throw new Error('missing_wallet_signing_material');
+    const wallet = await WalletAuth.requireUnlockedWallet();
+    const publicKey = wallet.getPublicKey();
+    const signedTx = await wallet.signTransaction(txCore);
+    const signature = typeof signedTx === 'string' ? signedTx : signedTx && signedTx.signature;
+    return {
+        buyer_thr: wallet.address,
+        credential_lookup_address: wallet.credentialLookupAddress || wallet.address,
+        public_key: publicKey,
+        signed_tx: typeof signedTx === 'string' ? { ...txCore, public_key: publicKey, publicKey, signature } : signedTx,
+        signature,
+        auth_secret: wallet.authSecret || ''
+    };
+}
+
+function resolveNftImage(path) {
+    if (!path) return '/static/img/thronos-token.png';
+    if (window.FetchUtils && typeof window.FetchUtils.resolveMediaUrl === 'function') {
+        const resolved = window.FetchUtils.resolveMediaUrl(path);
+        return resolved || '/static/img/thronos-token.png';
+    }
+    if (/^https?:\/\//i.test(path)) return path;
+    if (path.startsWith('/media/')) return path;
+    if (path.startsWith('/static/nft_images/')) {
+        return `/media/nft_images/${path.split('/static/nft_images/')[1]}`;
+    }
+    return `/media/nft_images/${path.replace(/^\/+/, '')}`;
+}
+
+// Tab switching
+function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    $(name + '-tab').style.display = 'block';
+    event.target.classList.add('active');
+
+    if (name === 'my-nfts') loadMyNFTs();
+}
+
+// Load NFTs
+async function loadNFTs() {
+    const grid = $('nftGrid');
+    grid.innerHTML = '<div class="empty-state"><span class="lang-el">Φόρτωση...</span><span class="lang-en">Loading...</span></div>';
+
+    try {
+        const res = await fetch('/api/v1/nfts');
+        const data = await res.json();
+        nfts = data.nfts || [];
+
+        // Update stats
+        $('totalNFTs').textContent = nfts.length;
+        $('totalCollections').textContent = new Set(nfts.map(n => n.collection || 'default')).size;
+
+        // Calculate total volume and floor price
+        const totalVolume = nfts.reduce((sum, n) => sum + (parseFloat(n.price) || 0), 0);
+        const prices = nfts.map(n => parseFloat(n.price) || 0).filter(p => p > 0);
+        const floorPrice = prices.length > 0 ? Math.min(...prices) : 0;
+        $('totalVolume').textContent = totalVolume.toFixed(2) + ' THR';
+        $('floorPrice').textContent = floorPrice.toFixed(2) + ' THR';
+
+        if (nfts.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1/-1;">
+                    <div class="icon">🎨</div>
+                    <p><span class="lang-el">Δεν υπάρχουν NFTs ακόμα. Γίνετε ο πρώτος δημιουργός!</span>
+                    <span class="lang-en">No NFTs yet. Be the first creator!</span></p>
+                </div>
+            `;
+            return;
+        }
+
+        // Apply filters and sorting
+        let filteredNFTs = [...nfts];
+
+        // Category filter
+        const category = $('category').value;
+        if (category && category !== 'all') {
+            filteredNFTs = filteredNFTs.filter(n => n.category === category);
+        }
+
+        // Sorting
+        const sortBy = $('sortBy').value;
+        if (sortBy === 'price_low') {
+            filteredNFTs.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+        } else if (sortBy === 'price_high') {
+            filteredNFTs.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+        } else {
+            // Recent - sort by created_at or id descending
+            filteredNFTs.sort((a, b) => (b.created_at || b.id || '').localeCompare(a.created_at || a.id || ''));
+        }
+
+        if (filteredNFTs.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1/-1;">
+                    <div class="icon">🔍</div>
+                    <p><span class="lang-el">Δεν βρέθηκαν NFTs με αυτά τα κριτήρια</span>
+                    <span class="lang-en">No NFTs found with these filters</span></p>
+                </div>
+            `;
+            return;
+        }
+
+        renderNFTs(filteredNFTs, grid);
+    } catch (e) {
+        grid.innerHTML = '<div class="empty-state">Failed to load NFTs</div>';
+    }
+}
+
+// Render NFTs
+function renderNFTs(items, container) {
+    container.innerHTML = items.map(nft => `
+        <div class="nft-card" onclick="openBuyModal('${nft.id}')">
+            <div class="nft-image">
+                ${nft.image_url ? `<img src="${resolveNftImage(nft.image_url)}" alt="${escapeHtml(nft.name)}" onerror="this.src='/static/img/thronos-token.png'">` : '🎨'}
+            </div>
+            <div class="nft-info">
+                <div class="nft-title">${escapeHtml(nft.name)}</div>
+                <div class="nft-creator">by ${nft.creator ? nft.creator.substring(0, 10) + '...' : 'Unknown'}</div>
+                <div class="nft-price">
+                    <span class="label"><span class="lang-el">Τιμή</span><span class="lang-en">Price</span></span>
+                    <span class="value">${nft.price || 0} THR</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Load my NFTs
+async function loadMyNFTs() {
+    if (!connectedWallet) {
+        $('myNFTsGrid').innerHTML = `
+            <div class="empty-state" style="grid-column: 1/-1;">
+                <div class="icon">🔌</div>
+                <p><span class="lang-el">Συνδέστε το πορτοφόλι σας</span><span class="lang-en">Connect your wallet</span></p>
+            </div>
+        `;
+        return;
+    }
+
+    const myNFTs = nfts.filter(n => n.owner === connectedWallet && !n.burned);
+    if (myNFTs.length === 0) {
+        $('myNFTsGrid').innerHTML = `
+            <div class="empty-state" style="grid-column: 1/-1;">
+                <div class="icon">📭</div>
+                <p><span class="lang-el">Δεν έχετε NFTs ακόμα</span><span class="lang-en">You don't have any NFTs yet</span></p>
+            </div>
+        `;
+        return;
+    }
+
+    // Render NFTs with burn button for owned NFTs
+    $('myNFTsGrid').innerHTML = myNFTs.map(nft => `
+        <div class="nft-card">
+            <div class="nft-image" onclick="openBuyModal('${nft.id}')">
+                ${nft.image_url ? `<img src="${resolveNftImage(nft.image_url)}" alt="${escapeHtml(nft.name)}" onerror="this.src='/static/img/thronos-token.png'">` : '🎨'}
+            </div>
+            <div class="nft-info">
+                <div class="nft-title">${escapeHtml(nft.name)}</div>
+                <div class="nft-creator">by ${nft.creator ? nft.creator.substring(0, 10) + '...' : 'Unknown'}</div>
+                <div class="nft-price">
+                    <span class="label"><span class="lang-el">Τιμή</span><span class="lang-en">Price</span></span>
+                    <span class="value">${nft.price || 0} THR</span>
+                </div>
+                <button class="burn-btn" onclick="event.stopPropagation(); burnNFT('${nft.id}', '${escapeHtml(nft.name)}')" style="margin-top:10px; width:100%; padding:8px; background:#600; color:#f00; border:1px solid #f00; border-radius:6px; cursor:pointer; font-family:monospace;">
+                    🔥 <span class="lang-el">Καύση NFT</span><span class="lang-en">Burn NFT</span>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Burn NFT function with PIN confirmation
+async function burnNFT(nftId, nftName) {
+    try {
+        // Confirm action
+        const confirmMsg = localStorage.getItem('lang') === 'en'
+            ? `Are you sure you want to BURN "${nftName}"?\n\nThis action is PERMANENT and CANNOT be undone!\n\nThe NFT will be destroyed forever.`
+            : `Είστε σίγουροι ότι θέλετε να ΚΆΨΕΤΕ το "${nftName}";\n\nΑυτή η ενέργεια είναι ΜΟΝΙΜΗ και ΔΕΝ μπορεί να αναιρεθεί!\n\nΤο NFT θα καταστραφεί για πάντα.`;
+
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        // Require unlocked wallet with PIN
+        if (!window.WalletAuth) {
+            alert('❌ Wallet authentication not available');
+            return;
+        }
+
+        const { address, authSecret } = await window.WalletAuth.requireUnlockedWallet();
+
+        // Call burn endpoint
+        const res = await fetch('/api/nft/burn', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nft_id: nftId,
+                owner: address,
+                auth_secret: authSecret
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.ok) {
+            const successMsg = localStorage.getItem('lang') === 'en'
+                ? `✅ NFT "${nftName}" has been burned successfully!`
+                : `✅ Το NFT "${nftName}" κάηκε με επιτυχία!`;
+            alert(successMsg);
+
+            // Reload NFTs
+            await loadNFTs();
+            await loadMyNFTs();
+        } else {
+            alert(`❌ Error: ${data.error || 'Failed to burn NFT'}`);
+        }
+    } catch (e) {
+        if (e.code === 'WALLET_NOT_CONNECTED') {
+            alert('❌ Please connect your wallet first!');
+        } else if (e.code === 'WALLET_LOCKED') {
+            alert('❌ Wallet is locked. Please unlock with your PIN.');
+        } else {
+            alert(`❌ Error: ${e.message || 'Unknown error'}`);
+        }
+    }
+}
+
+// Image preview
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            $('uploadPreview').innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 200px; border-radius: 8px;">`;
+            $('uploadArea').classList.add('has-file');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Mint NFT (with auth, PIN confirmation, fee deduction, chain recording)
+async function mintNFT() {
+    const name = $('nftName').value.trim();
+    const description = $('nftDescription').value.trim();
+    const category = $('nftCategory').value;
+    const price = parseFloat($('nftPrice').value) || 0;
+    const royalties = parseInt($('nftRoyalties').value) || 10;
+    const imageFile = $('nftImage').files[0];
+
+    if (!name || !connectedWallet) {
+        alert('Please enter a name and connect your wallet');
+        return;
+    }
+
+    let walletAuth;
+    try {
+        walletAuth = await WalletAuth.requireUnlockedWallet();
+        connectedWallet = walletAuth.address;
+    } catch (err) {
+        alert(err.message || 'missing_wallet_signing_material');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('description', description);
+    formData.append('category', category);
+    formData.append('price', price);
+    formData.append('royalties', royalties);
+    formData.append('creator', connectedWallet);
+    formData.append('credential_lookup_address', walletAuth.credentialLookupAddress || connectedWallet);
+    formData.append('public_key', walletAuth.getPublicKey());
+    formData.append('auth_secret', walletAuth.authSecret || '');
+    if (imageFile) formData.append('image', imageFile);
+
+    try {
+        const res = await fetch('/api/v1/nfts/mint', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+            const fee = data.mint_fee || 1;
+            alert(`NFT minted successfully! Fee: ${fee} THR`);
+            $('nftName').value = '';
+            $('nftDescription').value = '';
+            $('nftPrice').value = '';
+            $('uploadPreview').innerHTML = '<span style="font-size: 3em;">📁</span><p>Click to upload</p>';
+            $('uploadArea').classList.remove('has-file');
+            loadNFTs();
+        } else {
+            alert('Error: ' + (data.message || 'Unknown error'));
+        }
+    } catch (e) {
+        alert('Failed to mint NFT: ' + e.message);
+    }
+}
+
+// Buy modal
+function openBuyModal(nftId) {
+    const nft = nfts.find(n => n.id === nftId);
+    if (!nft) return;
+
+    $('buyModalContent').innerHTML = `
+        <div style="text-align: center;">
+            <div class="nft-image" style="height: 150px; margin-bottom: 15px; border-radius: 12px;">
+                ${nft.image_url ? `<img src="${resolveNftImage(nft.image_url)}" style="border-radius: 12px;" onerror="this.src='/static/img/thronos-token.png'">` : '🎨'}
+            </div>
+            <h3 style="color: #d7ffe6;">${escapeHtml(nft.name)}</h3>
+            <p style="opacity: 0.7;">${escapeHtml(nft.description || '')}</p>
+            <div style="font-size: 1.5em; color: #3CFF7A; margin: 20px 0;">
+                ${nft.price || 0} THR
+            </div>
+            <button class="btn-primary" onclick="buyNFT('${nft.id}')">
+                🛒 <span class="lang-el">Αγορά Τώρα</span><span class="lang-en">Buy Now</span>
+            </button>
+        </div>
+    `;
+
+    $('buyModal').classList.add('active');
+}
+
+function closeBuyModal() {
+    $('buyModal').classList.remove('active');
+}
+
+async function buyNFT(nftId) {
+    connectedWallet = getNftActiveWalletAddress();
+    if (!connectedWallet) {
+        alert('Please connect your wallet first');
+        return;
+    }
+    await executeBuyNFT(nftId);
+}
+
+async function executeBuyNFT(nftId) {
+    try {
+        const nft = nfts.find(n => n.id === nftId) || {};
+        const txCore = {
+            from: getNftActiveWalletAddress(),
+            to: nft.owner || nft.owner_address || nft.creator || 'NFT_MARKETPLACE',
+            amount: Number(nft.price || 0),
+            token: 'THR',
+            nonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            timestamp: new Date().toISOString()
+        };
+        const auth = await requireNftWalletAuth(txCore);
+        const res = await fetch('/api/nfts/buy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nft_id: nftId,
+                buyer_thr: auth.buyer_thr,
+                buyer: auth.buyer_thr,
+                credential_lookup_address: auth.credential_lookup_address,
+                public_key: auth.public_key,
+                signed_tx: auth.signed_tx,
+                signature: auth.signature,
+                auth_secret: auth.auth_secret
+            })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+            alert('NFT purchased successfully!');
+            closeBuyModal();
+            loadNFTs();
+        } else {
+            alert('Error: ' + (data.message || data.error || 'Unknown error'));
+        }
+    } catch (e) {
+        alert('Failed to buy NFT: ' + (e.message || 'missing_wallet_signing_material'));
+    }
+}
+
+// Utility
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// Check wallet
+if (connectedWallet) {
+    console.log('Wallet connected:', connectedWallet);
+}
+
+// Initial load
+loadNFTs();
+</script>
+{% endblock %}

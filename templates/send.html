@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+
+{% block title %}🔥 Thronos – Send THR{% endblock %}
+
+{% block styles %}
+<style>
+  :root{
+    --line:#00ff66; --bg:#000; --panel:#050505; --txt:#b8ffcc;
+  }
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;margin:6px 0 16px;
+  }
+  .nav a{color:var(--line);text-decoration:none;margin-right:12px;border:1px solid var(--line);padding:4px 8px}
+  .nav a:hover{background:#002d14}
+  label{display:block;margin-top:12px;margin-bottom:4px}
+  input{
+    width:100%;padding:8px;background:#000;border:1px solid var(--line);color:var(--line);font-family:inherit;box-sizing:border-box
+  }
+  button{margin-top:12px;padding:8px 14px;background:var(--line);color:#001a0c;border:none;cursor:pointer;font-weight:800}
+  button:hover{filter:brightness(0.9)}
+  .row{display:flex;gap:16px;flex-wrap:wrap}
+  .col{flex:1 1 320px}
+  pre{background:var(--panel);border:1px solid var(--line);padding:8px;max-height:280px;overflow:auto;font-size:12px;white-space:pre-wrap;color:var(--txt)}
+  .small-note{font-size:11px;color:#c9f9da}
+  .badge{display:inline-block;border:1px solid var(--line);padding:2px 8px;border-radius:12px;font-size:12px;margin-left:6px}
+  .b-pending{background:#173b22}
+  .b-ok{background:#163b28}
+  .b-warn{background:#3b2d16;border-color:#ffd166;color:#ffd166}
+  .kpi{display:flex;gap:12px;align-items:center;margin-top:8px}
+  .kpi div{border:1px solid var(--line);padding:6px 10px}
+  .muted{color:#8eeabf}
+  #chartSection{margin-top:26px;border-top:1px solid var(--line);padding-top:16px}
+  iframe{width:100%;height:560px;border:none;background:#111}
+  
+  .wallet-warning {
+      background: #331100;
+      border: 1px solid #ff4400;
+      color: #ffaa88;
+      padding: 10px;
+      margin-bottom: 20px;
+      display: none;
+  }
+  
+  .fee-box {
+      border: 1px dashed #00ff66;
+      padding: 10px;
+      margin-top: 10px;
+      background: #001100;
+      font-size: 0.9em;
+  }
+  .fee-row {
+      display: flex;
+      justify-content: space-between;
+  }
+
+  /* New table styling for transaction history */
+  table.tx-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 12px;
+  }
+  table.tx-table th, table.tx-table td {
+      border: 1px solid var(--line);
+      padding: 4px 6px;
+  }
+  table.tx-table th {
+      background: #010a05;
+      color: var(--line);
+  }
+  table.tx-table tbody tr:nth-child(odd) {
+      background: #001509;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="topbar">
+  <div class="nav">
+    <a href="/"  title="Home">🏠 Home</a>
+    <a href="/viewer" title="Viewer">🧱 Viewer</a>
+    <a href="/wallet" title="Wallet">👛 Wallet</a>
+  </div>
+  <div class="muted">Thronos Network</div>
+</div>
+
+<h1>📤 <span class="lang-el">Αποστολή THR</span><span class="lang-en">Send THR</span></h1>
+
+<div id="walletWarning" class="wallet-warning">
+    ⚠️ <span class="lang-el">Δεν είστε συνδεδεμένοι.</span><span class="lang-en">You are not connected.</span> 
+    <a href="/wallet" style="color:#fff; text-decoration:underline;">Connect Wallet</a>
+</div>
+
+<div class="row">
+  <div class="col">
+    <label for="from_thr"><span class="lang-el">Από Διεύθυνση THR</span><span class="lang-en">From THR Address</span></label>
+    <input id="from_thr" placeholder="π.χ. THR1764..." />
+
+    <label for="to_thr"><span class="lang-el">Προς Διεύθυνση THR</span><span class="lang-en">To THR Address</span></label>
+    <input id="to_thr" placeholder="Recipient THR address" />
+
+    <label for="amount"><span class="lang-el">Ποσό (THR)</span><span class="lang-en">Amount (THR)</span></label>
+    <input id="amount" type="number" step="0.000001" min="0" value="0.1" oninput="updateFee()" />
+
+    <div class="fee-box">
+        <div class="fee-row">
+            <span><span class="lang-el">Προμήθεια (Burn)</span><span class="lang-en">Burn Fee (0.5%)</span>:</span>
+            <span id="feeDisplay">0.001000 THR</span>
+        </div>
+        <div class="fee-row" style="margin-top:5px; border-top:1px solid #333; padding-top:5px;">
+            <span><span class="lang-el">Σύνολο Χρέωσης</span><span class="lang-en">Total Cost</span>:</span>
+            <span id="totalCostDisplay" style="color:#fff; font-weight:bold;">0.101000 THR</span>
+        </div>
+    </div>
+
+
+    <div class="kpi">
+      <div>🧺 Mempool: <span id="mpCount">0</span></div>
+      <div>⛏️ Last block: <span id="lastBlockAgo">—</span></div>
+      <div id="pendingBadge" class="badge b-pending" style="display:none;">pending… waiting confirmation</div>
+      <div id="okBadge" class="badge b-ok" style="display:none;">confirmed ✅</div>
+      <div id="warnBadge" class="badge b-warn" style="display:none;">no miners? watchdog may help</div>
+    </div>
+
+    <button onclick="doSend()"><span class="lang-el">Αποστολή THR</span><span class="lang-en">Send THR</span></button>
+    <button onclick="loadBalance()"><span class="lang-el">Φόρτωση Υπολοίπου</span><span class="lang-en">Load Balance</span></button>
+  </div>
+
+  <div class="col">
+    <label><span class="lang-el">Υπόλοιπο</span><span class="lang-en">Balance</span></label>
+    <div id="balanceDisplay" class="balance-box" style="border:1px solid var(--line);padding:8px;font-size:12px;"></div>
+
+    <label style="margin-top:16px;"><span class="lang-el">Ιστορικό Συναλλαγών</span><span class="lang-en">Transaction History</span></label>
+    <table class="tx-table" id="txTable">
+      <thead>
+        <tr>
+          <th><span class="lang-el">Τύπος</span><span class="lang-en">Type</span></th>
+          <th>From</th>
+          <th>To</th>
+          <th><span class="lang-el">Ποσό</span><span class="lang-en">Amount</span></th>
+          <th><span class="lang-el">Χρέωση</span><span class="lang-en">Fee</span></th>
+          <th><span class="lang-el">Ώρα</span><span class="lang-en">Time</span></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button id="toggleJsonBtn" onclick="toggleRawJson()" style="margin-top:10px;">
+      <span class="lang-el">Εμφάνιση JSON</span><span class="lang-en">Show JSON</span>
+    </button>
+    <pre id="walletBox" style="display:none; margin-top:10px;">{}</pre>
+
+    <label style="margin-top:16px;"><span class="lang-el">Αποτέλεσμα Αποστολής</span><span class="lang-en">Send Result</span></label>
+    <pre id="sendResult">{}</pre>
+  </div>
+</div>
+
+<!-- Removed chartSection for cleaner UI -->
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = (id)=>document.getElementById(id);
+const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+
+// --- Fee Logic ---
+let latestFee = 0;
+async function updateFee() {
+    let amount = parseFloat($('amount').value) || 0;
+    if (amount < 0) amount = 0;
+    try {
+      const r = await fetch('/api/v1/wallet/fee-estimate', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ amount, token:'THR' })});
+      const d = await r.json();
+      latestFee = Number(d.fee || 0);
+    } catch(_) { latestFee = 0; }
+    const total = amount + latestFee;
+    $('feeDisplay').textContent = latestFee.toFixed(6) + " THR";
+    $('totalCostDisplay').textContent = total.toFixed(6) + " THR";
+}
+
+// --- Auto-fill from localStorage ---
+document.addEventListener('DOMContentLoaded', () => {
+    const savedAddr = walletSession.getAddress();
+    const bound = walletSession.isBound();
+
+    if (savedAddr && bound) {
+        $('from_thr').value = savedAddr;
+        loadBalance(); // Auto load balance
+    } else {
+        $('walletWarning').style.display = 'block';
+    }
+    
+    
+    updateFee(); // Init fee display
+});
+
+function toggleRawJson() {
+    const box = $('walletBox');
+    const btn = $('toggleJsonBtn');
+    const lang = localStorage.getItem('lang') || 'el';
+    // Toggle visibility
+    if (box.style.display === 'none' || box.style.display === '') {
+        box.style.display = 'block';
+        btn.innerHTML = (lang === 'el' ? 'Απόκρυψη JSON' : 'Hide JSON');
+    } else {
+        box.style.display = 'none';
+        btn.innerHTML = (lang === 'el' ? 'Εμφάνιση JSON' : 'Show JSON');
+    }
+}
+
+async function pulseNetworkKpis(){
+  try{
+    const mp = await fetch('/api/mempool').then(r=>r.json());
+    $('mpCount').textContent = mp.length ?? 0;
+
+    const last = await fetch('/last_block').then(r=>r.json());
+    if(last.timestamp){
+      const t = new Date((last.timestamp||'').replace(' UTC','')+'Z').getTime();
+      const sec = Math.max(0, Math.floor((Date.now()-t)/1000));
+      $('lastBlockAgo').textContent = sec+'s ago';
+      $('warnBadge').style.display = (sec>90 && (mp.length||0)>0) ? 'inline-block':'none';
+    }
+  }catch(e){
+    console.error('Network KPIs update failed:', e);
+  }
+}
+let networkKpiInterval = null;
+networkKpiInterval = setInterval(pulseNetworkKpis, 5000);
+pulseNetworkKpis();
+
+async function loadBalance() {
+  const thr = $('from_thr').value.trim();
+  const lang = localStorage.getItem('lang') || 'el';
+  if(!thr){ 
+      // Don't alert on auto-load, just return
+      return; 
+  }
+
+  try{
+    const data = await fetch(`/wallet_data/${encodeURIComponent(thr)}`).then(r=>r.json());
+    // Populate raw JSON content (hidden by default)
+    $('walletBox').textContent = JSON.stringify(data, null, 2);
+
+    // Build balance summary
+    const balLines = [];
+    // THR balance
+    balLines.push(`THR: ${parseFloat(data.balance || 0).toFixed(6)}`);
+    // L2E token balance
+    if (typeof data.l2e_balance !== 'undefined') {
+        balLines.push(`L2E: ${parseFloat(data.l2e_balance || 0).toFixed(6)}`);
+    }
+    // wBTC balance
+    if (typeof data.wbtc_balance !== 'undefined') {
+        balLines.push(`wBTC: ${parseFloat(data.wbtc_balance || 0).toFixed(8)}`);
+    }
+    $('balanceDisplay').textContent = balLines.join('\n');
+
+    // Render transaction history table
+    const tbody = $('txTable').querySelector('tbody');
+    tbody.innerHTML = '';
+    const txs = (data.transactions || []).filter(tx => {
+        const ttype = (tx.type || '').toString();
+        const amt = parseFloat(tx.amount || 0);
+        // Exclude AI logs and service payments and zero-amount entries
+        if (ttype.startsWith('ai_')) return false;
+        if (ttype === 'service_payment') return false;
+        if (!amt || amt === 0) return false;
+        return true;
+    });
+    txs.forEach(tx => {
+        const tr = document.createElement('tr');
+        // Type
+        const tdType = document.createElement('td');
+        tdType.textContent = tx.type || '';
+        tr.appendChild(tdType);
+        // From
+        const tdFrom = document.createElement('td');
+        const f = tx.from || '';
+        tdFrom.textContent = f.length > 12 ? f.substring(0,8)+'...' : f;
+        tr.appendChild(tdFrom);
+        // To
+        const tdTo = document.createElement('td');
+        const t = tx.to || '';
+        tdTo.textContent = t.length > 12 ? t.substring(0,8)+'...' : t;
+        tr.appendChild(tdTo);
+        // Amount
+        const tdAmt = document.createElement('td');
+        tdAmt.textContent = parseFloat(tx.amount || 0).toFixed(6);
+        tr.appendChild(tdAmt);
+        // Fee
+        const tdFee = document.createElement('td');
+        const feeVal = tx.fee_burned !== undefined ? parseFloat(tx.fee_burned) : (tx.fee !== undefined ? parseFloat(tx.fee) : 0);
+        tdFee.textContent = feeVal ? feeVal.toFixed(6) : '0.000000';
+        tr.appendChild(tdFee);
+        // Timestamp
+        const tdTime = document.createElement('td');
+        tdTime.textContent = tx.timestamp || '';
+        tr.appendChild(tdTime);
+        tbody.appendChild(tr);
+    });
+  }catch(e){
+    $('walletBox').textContent = (lang==='el'?'Σφάλμα φόρτωσης πορτοφολιού: ':'Error loading wallet: ')+e;
+  }
+}
+
+window.addEventListener('beforeunload', () => {
+  if (networkKpiInterval) {
+    clearInterval(networkKpiInterval);
+    networkKpiInterval = null;
+  }
+});
+
+/* State for pending follow-up */
+let lastSentTxId = null;
+let lastSentTo   = null;
+let lastSentAmt  = null;
+
+async function followUntilConfirmed(fromThr){
+  $('pendingBadge').style.display='inline-block';
+  $('okBadge').style.display='none';
+
+  for(let i=0;i<120;i++){ // έως 10 λεπτά (ανά 5s)
+    await sleep(5000);
+    pulseNetworkKpis();
+
+    // 1) Δες αν η TX βγήκε από το mempool
+    try{
+      const mp = await fetch('/api/mempool').then(r=>r.json());
+      const still = mp.find(t=>t.tx_id===lastSentTxId);
+      if(still){ continue; } // παραμένει pending
+
+      // 2) Αν δεν είναι στο mempool, δες ιστορικό πορτοφολιού παραλήπτη ή αποστολέα
+      const toData   = lastSentTo ? await fetch(`/wallet_data/${encodeURIComponent(lastSentTo)}`).then(r=>r.json()) : {transactions:[]};
+      const fromData = await fetch(`/wallet_data/${encodeURIComponent(fromThr)}`).then(r=>r.json());
+
+      const got = (toData.transactions||[]).some(t=>t.tx_id===lastSentTxId)
+               || (fromData.transactions||[]).some(t=>t.tx_id===lastSentTxId);
+
+      if(got){
+        $('pendingBadge').style.display='none';
+        $('okBadge').style.display='inline-block';
+        $('sendResult').textContent = JSON.stringify({status:'confirmed', tx_id:lastSentTxId}, null, 2);
+        loadBalance();
+        return;
+      }
+    }catch(e){
+      console.error('Transaction confirmation check failed:', e);
+    }
+  }
+  // timeout προβολή
+  $('pendingBadge').style.display='none';
+  $('sendResult').textContent = JSON.stringify({status:'unknown', tx_id:lastSentTxId, note:'no confirmation observed in window'}, null, 2);
+}
+
+async function doSend() {
+  const from_thr    = $('from_thr').value.trim();
+  const to_thr      = $('to_thr').value.trim();
+  const amount      = $('amount').value;
+  const lang = localStorage.getItem('lang') || 'el';
+
+  const msg = {
+    el:{missingAddr:'Συμπλήρωσε FROM και TO THR address', migrate:'Κάνε migrate σε Wallet V1 πριν την αποστολή', error:'Σφάλμα αποστολής: '},
+    en:{missingAddr:'Fill in FROM and TO THR address', migrate:'Migrate to Wallet V1 before sending', error:'Error sending: '}
+  }[lang];
+
+  if(!walletSession.isBound()){
+    alert('Wallet not connected');
+    return;
+  }
+
+  if(!from_thr || !to_thr){ alert(msg.missingAddr); return; }
+  if(!walletSession.getPublicKey || !walletSession.signTransaction || !walletSession.getPublicKey()){ alert(msg.migrate); return; }
+  if(!walletSession.requirePin('sign transaction')) return;
+
+  try{
+    const txCore = { from: from_thr, to: to_thr, amount: Number(amount), token: 'THR', nonce: String(Date.now()), timestamp: Math.floor(Date.now()/1000) };
+    const publicKey = walletSession.getPublicKey();
+    const signature = await walletSession.signTransaction(txCore);
+    const signed = { ...txCore, publicKey, signature };
+    const res = await fetch('/api/v1/tx/send', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ tx: signed })
+    });
+    const data = await res.json();
+    $('sendResult').textContent = JSON.stringify(data, null, 2);
+
+    // Αν είναι pending, ξεκίνα παρακολούθηση
+    if(data?.status === 'pending' && data?.tx){
+      lastSentTxId = data.tx.tx_id;
+      lastSentTo   = data.tx.to;
+      lastSentAmt  = data.tx.amount;
+      followUntilConfirmed(from_thr);
+    }
+    // ανανέωση υπολοίπου αμέσως (το fee κρατήθηκε)
+    loadBalance();
+    pulseNetworkKpis();
+  }catch(e){
+    $('sendResult').textContent = msg.error + e;
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}📜 THRONOS Tokenomics{% endblock %}
+
+{% block styles %}
+<style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+      background-color: #111;
+    }
+    th, td {
+      border: 1px solid #0f0;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #222;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+  <h1>📜 <span class="lang-el">THRONOS Tokenomics - Χρονοδιάγραμμα Halving</span><span class="lang-en">THRONOS Tokenomics - Halving Schedule</span></h1>
+  <p><span class="lang-el">Συνολική Προμήθεια THR: 21,000,001</span><span class="lang-en">Total THR Supply: 21,000,001 THR</span></p>
+  
+  <p>
+    <span class="lang-el">Η δυσκολία και οι ανταμοιβές για τους miners είναι δυναμικές. Ελπίζουμε ότι καθώς περισσότερη ενέργεια εισέρχεται στο σύστημα, η διανομή θα γίνεται σοφά. Τα tokenomics και η ανταμοιβή βασίζονται στην επάρκεια των blocks, και η δυσκολία για τους miners αυξάνεται αυτόματα όταν υπάρχουν πολλοί ταυτόχρονοι συμμετέχοντες. Στο BTC, όλοι παίρνουν το ίδιο; Με ποια βάση; Η φιλοσοφία του PoW μας είναι αυτή:</span>
+    <span class="lang-en">The difficulty and rewards for miners are dynamic. We hope that as more energy enters the system, the distribution happens wisely. The tokenomics and rewards are based on block sufficiency, and the difficulty for miners increases automatically when there are many simultaneous participants. In BTC, everyone gets the same; on what basis is our PoW philosophy? This is it:</span>
+  </p>
+
+  <!-- New Tokenomics details for version 3.7 -->
+  <h2><span class="lang-el">Βασικές Παράμετροι THR</span><span class="lang-en">THR Key Parameters</span></h2>
+  <ul>
+    <li><span class="lang-el"><strong>Συνολική Προμήθεια:</strong> 21,000,001 THR (Bitcoin + 1)</span><span class="lang-en"><strong>Total Supply:</strong> 21,000,001 THR (Bitcoin + 1)</span></li>
+    <li><span class="lang-el"><strong>Χρόνος Block:</strong> 2 λεπτά</span><span class="lang-en"><strong>Block Time:</strong> 2 minutes</span></li>
+    <li><span class="lang-el"><strong>Διάστημα Halving:</strong> 1,312,500 blocks (~5 χρόνια)</span><span class="lang-en"><strong>Halving Interval:</strong> 1,312,500 blocks (~5 years)</span></li>
+    <li><span class="lang-el"><strong>Αρχική Ανταμοιβή:</strong> 8.0 THR/block</span><span class="lang-en"><strong>Initial Reward:</strong> 8.0 THR/block</span></li>
+    <li><span class="lang-el"><strong>Διανομή Reward (v2):</strong> 80% Miner, 5% Full Nodes, 5% Ecosystem (Digital Legacy + Notaries + IoT)</span><span class="lang-en"><strong>Reward Distribution (v2):</strong> 80% Miner, 5% Full Nodes, 5% Ecosystem (Digital Legacy + Notaries + IoT)</span></li>
+    <li><span class="lang-el"><strong>Peg:</strong> 1 THR = 0.0001 BTC (μέσω της Watcher γέφυρας).</span><span class="lang-en"><strong>Peg:</strong> 1 THR = 0.0001 BTC (via the Watcher bridge).</span></li>
+    <li><span class="lang-el"><strong>Δευτερεύον Token:</strong> L2E, κόβεται ως ανταμοιβή για μαθητές και δεν έχει προκαθορισμένη συνολική προμήθεια.</span><span class="lang-en"><strong>Secondary Token:</strong> L2E is minted as rewards for students and has no predetermined max supply.</span></li>
+    <li><span class="lang-el"><strong>Μουσική Οικονομία:</strong> Οι πληρωμές για τραγούδια γίνονται σε THR και μοιράζονται αυτόματα στους καλλιτέχνες βάσει ποσοστών.</span><span class="lang-en"><strong>Music Economy:</strong> Purchases of songs are paid in THR and automatically split among artists according to their royalty percentages.</span></li>
+  </ul>
+
+  <p style="margin-top: 20px;">
+    <span class="lang-el"><strong>🔗 Digital Legacy Integration:</strong> Το 5% του ecosystem pool χρησιμοποιείται για τη Digital Legacy System - unclaimed assets επιστρέφουν στο δίκτυο και διανέμονται δίκαια σε σχολεία (25%), στέγη (25%), υγεία (25%), τροφή (15%) και κοινοτικές αναπτύξεις (10%).</span>
+    <span class="lang-en"><strong>🔗 Digital Legacy Integration:</strong> The 5% ecosystem pool is used for the Digital Legacy System - unclaimed assets return to the network and are fairly distributed to schools (25%), housing (25%), healthcare (25%), food (15%), and community development (10%).</span>
+  </p>
+  
+  <table>
+    <tr>
+      <th><span class="lang-el">Εποχή</span><span class="lang-en">Epoch</span><span class="lang-ja">エポック</span><span class="lang-es">Época</span><span class="lang-ru">Эпоха</span></th>
+      <th><span class="lang-el">Εύρος Block</span><span class="lang-en">Block Range</span><span class="lang-ja">ブロック範囲</span><span class="lang-es">Rango de Bloque</span><span class="lang-ru">Диапазон блоков</span></th>
+      <th><span class="lang-el">Ανταμοιβή/Block</span><span class="lang-en">Reward/Block</span><span class="lang-ja">報酬/ブロック</span><span class="lang-es">Recompensa/Bloque</span><span class="lang-ru">Вознаграждение/Блок</span></th>
+      <th><span class="lang-el">Σύνολο Έκδοσης</span><span class="lang-en">Total Issued</span><span class="lang-ja">合計発行</span><span class="lang-es">Emisión Total</span><span class="lang-ru">Общий выпуск</span></th>
+    </tr>
+    <tr><td>0</td><td>0 – 1,312,499</td><td>8.000000</td><td>10,500,000.000</td></tr>
+    <tr><td>1</td><td>1,312,500 – 2,624,999</td><td>4.000000</td><td>5,250,000.000</td></tr>
+    <tr><td>2</td><td>2,625,000 – 3,937,499</td><td>2.000000</td><td>2,625,000.000</td></tr>
+    <tr><td>3</td><td>3,937,500 – 5,249,999</td><td>1.000000</td><td>1,312,500.000</td></tr>
+    <tr><td>4</td><td>5,250,000 – 6,562,499</td><td>0.500000</td><td>656,250.000</td></tr>
+    <tr><td>5</td><td>6,562,500 – 7,874,999</td><td>0.250000</td><td>328,125.000</td></tr>
+    <tr><td>6</td><td>7,875,000 – 9,187,499</td><td>0.125000</td><td>164,062.500</td></tr>
+    <tr><td>7</td><td>9,187,500 – 10,499,999</td><td>0.062500</td><td>82,031.250</td></tr>
+    <tr><td>8+</td><td>10,500,000+</td><td>→ 0.000000</td><td>→ 21,000,001 THR</td></tr>
+  </table>
+{% endblock %}

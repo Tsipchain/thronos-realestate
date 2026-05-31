@@ -1,0 +1,1349 @@
+{% extends "base.html" %}
+
+{% block title %}Thronos Network - Decentralized Blockchain Platform{% endblock %}
+
+{% block styles %}
+<style>
+    /* ─── Hero Section ─────────────────────────────────────────── */
+    .hero {
+        background: linear-gradient(135deg, #000000 0%, #0a1f0a 50%, #000000 100%);
+        border: 2px solid;
+        border-image: linear-gradient(135deg, #00ff66 0%, #ffd700 50%, #00ff66 100%) 1;
+        border-radius: 20px;
+        padding: 50px 30px;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(0, 255, 102, 0.05) 0%, transparent 50%);
+        animation: pulse 8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 0.8; }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero h1 {
+        font-size: 3em;
+        margin-bottom: 15px;
+        background: linear-gradient(135deg, #00ff00 0%, #ffd700 50%, #00ff66 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 0 40px rgba(0, 255, 102, 0.3);
+    }
+
+    .hero-tagline {
+        font-size: 1.3em;
+        color: #00ff66;
+        margin-bottom: 30px;
+        opacity: 0.9;
+    }
+
+    .hero-btns {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .hero-btn {
+        padding: 15px 40px;
+        border-radius: 30px;
+        font-weight: bold;
+        font-size: 1.1em;
+        text-decoration: none;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .hero-btn.primary {
+        background: linear-gradient(135deg, #00ff00 0%, #00ff66 100%);
+        color: #000;
+        border: 2px solid #00ff66;
+        box-shadow: 0 0 20px rgba(0, 255, 102, 0.3);
+    }
+
+    .hero-btn.primary:hover {
+        background: linear-gradient(135deg, #00ff66 0%, #ffd700 100%);
+        transform: translateY(-3px);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+    }
+
+    .hero-btn.secondary {
+        background: transparent;
+        color: #00ff66;
+        border: 2px solid #00ff66;
+    }
+
+    .hero-btn.secondary:hover {
+        background: rgba(0, 255, 102, 0.1);
+        transform: translateY(-3px);
+    }
+
+    /* ─── Live Stats Grid ──────────────────────────────────────── */
+    .stats-section {
+        margin-bottom: 40px;
+    }
+
+    .stats-section h2 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #00ff66;
+        font-size: 1.5em;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 40, 20, 0.3) 100%);
+        border: 1px solid #1a3b2e;
+        border-radius: 16px;
+        padding: 25px 20px;
+        text-align: center;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(0, 255, 102, 0.1), transparent);
+        transition: left 0.5s;
+    }
+
+    .stat-card:hover {
+        border-color: #00ff66;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 255, 102, 0.2);
+    }
+
+    .stat-card:hover::before {
+        left: 100%;
+    }
+
+    .stat-icon {
+        font-size: 2.5em;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .stat-value {
+        font-size: 2em;
+        font-weight: bold;
+        color: #00ff66;
+        font-family: 'Courier New', monospace;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        color: #888;
+        font-size: 0.9em;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .indexing-badge {
+        display: inline-block;
+        margin-top: 4px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid #ffd700;
+        color: #ffd700;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* ─── Features Grid ────────────────────────────────────────── */
+    .features-section {
+        margin-bottom: 40px;
+    }
+
+    .features-section h2 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #ffd700;
+        font-size: 1.5em;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .feature-card {
+        background: linear-gradient(135deg, rgba(10, 10, 10, 0.9) 0%, rgba(26, 59, 46, 0.2) 100%);
+        border: 1px solid #1a3b2e;
+        border-radius: 16px;
+        padding: 25px;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .feature-card:hover {
+        border-color: #00ff66;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 255, 102, 0.15);
+    }
+
+    .feature-icon {
+        font-size: 2.5em;
+        margin-bottom: 15px;
+    }
+
+    .feature-title {
+        font-size: 1.3em;
+        color: #00ff66;
+        margin-bottom: 10px;
+    }
+
+    .feature-desc {
+        color: #888;
+        font-size: 0.95em;
+        line-height: 1.6;
+    }
+
+    /* ─── Quick Actions ────────────────────────────────────────── */
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 40px;
+    }
+
+    .quick-action {
+        background: linear-gradient(135deg, #111 0%, #0a1f0a 100%);
+        border: 1px solid #1a3b2e;
+        border-radius: 12px;
+        padding: 20px 15px;
+        text-align: center;
+        text-decoration: none;
+        color: #e0e0e0;
+        transition: all 0.3s;
+    }
+
+    .quick-action:hover {
+        border-color: #00ff66;
+        background: linear-gradient(135deg, #1a3b2e 0%, #0a1f0a 100%);
+        transform: translateY(-3px);
+    }
+
+    .quick-action-icon {
+        font-size: 2em;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .quick-action-label {
+        font-size: 0.9em;
+    }
+
+    /* ─── Latest Activity ──────────────────────────────────────── */
+    .activity-section {
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 40, 20, 0.2) 100%);
+        border: 1px solid #1a3b2e;
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 40px;
+    }
+
+    .activity-section h2 {
+        color: #00ff66;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .activity-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(0, 255, 102, 0.1);
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-icon {
+        font-size: 1.5em;
+        width: 40px;
+        text-align: center;
+    }
+
+    .activity-details {
+        flex: 1;
+    }
+
+    .activity-title {
+        color: #e0e0e0;
+        font-size: 0.95em;
+    }
+
+    .activity-time {
+        color: #666;
+        font-size: 0.8em;
+    }
+
+    .activity-value {
+        color: #00ff66;
+        font-family: monospace;
+        font-weight: bold;
+    }
+
+    /* ─── Beta Section ─────────────────────────────────────────── */
+    .beta-section {
+        background: linear-gradient(135deg, #1a001a 0%, #200020 100%);
+        border: 1px solid #f0f;
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 40px;
+    }
+
+    .beta-section h3 {
+        color: #f0f;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .beta-section p {
+        color: #ccc;
+        margin-bottom: 15px;
+    }
+
+    .voting-polls {
+        display: grid;
+        gap: 15px;
+    }
+
+    .poll-card {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 0, 255, 0.3);
+        border-radius: 12px;
+        padding: 15px;
+    }
+
+    .poll-title {
+        color: #f0f;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    .poll-desc {
+        color: #999;
+        font-size: 0.9em;
+        margin-bottom: 12px;
+    }
+
+    .poll-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .poll-votes {
+        color: #0f0;
+        font-size: 0.9em;
+    }
+
+    .poll-btn {
+        background: #300030;
+        color: #f0f;
+        border: 1px solid #f0f;
+        padding: 8px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .poll-btn:hover {
+        background: #500050;
+    }
+
+    /* ─── Exchange Rate Banner ─────────────────────────────────── */
+    .rate-banner {
+        background: linear-gradient(135deg, #000 0%, #071810 50%, #000 100%);
+        border: 2px solid;
+        border-image: linear-gradient(135deg, #ffd700 0%, #00ff00 100%) 1;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .rate-value {
+        font-size: 1.8em;
+        color: #ffd700;
+        font-weight: bold;
+        font-family: 'Courier New', monospace;
+    }
+
+    .rate-label {
+        color: #888;
+        font-size: 0.9em;
+        margin-top: 5px;
+    }
+
+    /* ─── Spinner ──────────────────────────────────────────────── */
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(0, 255, 102, 0.3);
+        border-radius: 50%;
+        border-top-color: #00ff66;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* ─── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 768px) {
+        .hero h1 { font-size: 2em; }
+        .hero-tagline { font-size: 1em; }
+        .stat-value { font-size: 1.5em; }
+        .hero-btns { flex-direction: column; align-items: center; }
+        .hero-btn { width: 100%; max-width: 300px; justify-content: center; }
+    }
+
+    /* ─── Wallet Modal ───────────────────────────────────────────── */
+    .wallet-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+        z-index: 3000;
+        align-items: center;
+        justify-content: center;
+    }
+    .wallet-modal-overlay.active { display: flex; }
+
+    .wallet-modal {
+        background: linear-gradient(135deg, #0a0f0a 0%, #071810 100%);
+        border: 2px solid #00ff66;
+        border-radius: 20px;
+        padding: 30px;
+        width: 90%;
+        max-width: 440px;
+        box-shadow: 0 0 50px rgba(0, 255, 102, 0.3);
+        position: relative;
+    }
+
+    .wallet-modal-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        color: #888;
+        font-size: 24px;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+    .wallet-modal-close:hover { color: #ff4b81; }
+
+    .wallet-modal h2 {
+        text-align: center;
+        color: #00ff66;
+        margin-bottom: 20px;
+        font-size: 1.5em;
+    }
+
+    .wallet-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .wallet-tab {
+        flex: 1;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid #1a3b2e;
+        border-radius: 10px;
+        color: #888;
+        cursor: pointer;
+        text-align: center;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    .wallet-tab.active {
+        border-color: #00ff66;
+        color: #00ff66;
+        background: rgba(0, 255, 102, 0.1);
+    }
+    .wallet-tab:hover { border-color: #00ff66; }
+
+    .wallet-panel { display: none; }
+    .wallet-panel.active { display: block; }
+
+    .wallet-input-group {
+        margin-bottom: 16px;
+    }
+    .wallet-input-group label {
+        display: block;
+        color: #888;
+        font-size: 12px;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .wallet-input-group input {
+        width: 100%;
+        padding: 14px;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid #1a3b2e;
+        border-radius: 10px;
+        color: #e0e0e0;
+        font-size: 16px;
+        font-family: monospace;
+    }
+    .wallet-input-group input:focus {
+        outline: none;
+        border-color: #00ff66;
+        box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
+    }
+
+    .pin-input {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin: 15px 0;
+    }
+    .pin-input input {
+        width: 50px;
+        height: 60px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        background: rgba(0, 0, 0, 0.6);
+        border: 2px solid #1a3b2e;
+        border-radius: 10px;
+        color: #00ff66;
+    }
+    .pin-input input:focus {
+        outline: none;
+        border-color: #00ff66;
+        box-shadow: 0 0 15px rgba(0, 255, 102, 0.3);
+    }
+
+    .wallet-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #00ff00 0%, #00ff66 100%);
+        border: none;
+        border-radius: 12px;
+        color: #000;
+        font-weight: bold;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: all 0.3s;
+        box-shadow: 0 0 20px rgba(0, 255, 102, 0.3);
+    }
+    .wallet-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 30px rgba(0, 255, 102, 0.5);
+    }
+    .wallet-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    .wallet-btn.secondary {
+        background: transparent;
+        border: 2px solid #00ff66;
+        color: #00ff66;
+    }
+    .wallet-btn.secondary:hover {
+        background: rgba(0, 255, 102, 0.1);
+    }
+
+    .wallet-status {
+        text-align: center;
+        padding: 10px;
+        margin-top: 10px;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    .wallet-status.success {
+        background: rgba(0, 255, 102, 0.2);
+        color: #00ff66;
+        border: 1px solid #00ff66;
+    }
+    .wallet-status.error {
+        background: rgba(255, 75, 129, 0.2);
+        color: #ff4b81;
+        border: 1px solid #ff4b81;
+    }
+
+    .wallet-connected-info {
+        text-align: center;
+        padding: 20px;
+    }
+    .wallet-connected-info .address {
+        font-family: monospace;
+        font-size: 14px;
+        color: #00ff66;
+        background: rgba(0, 0, 0, 0.4);
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin: 10px 0;
+        word-break: break-all;
+    }
+    .wallet-connected-info .balance {
+        font-size: 2em;
+        color: #ffd700;
+        font-weight: bold;
+        margin: 15px 0;
+    }
+
+    .passkey-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 15px;
+        transition: all 0.3s;
+    }
+    .passkey-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin: 20px 0;
+        color: #666;
+        font-size: 12px;
+    }
+    .divider::before, .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #1a3b2e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero">
+    <div class="hero-content">
+        <h1>🔥 THRONOS NETWORK</h1>
+        <p class="hero-tagline">
+            <span class="lang-el">Ένα blockchain αντίστασης. Μια δέσμευση στο άκαυστο.</span>
+            <span class="lang-en">A blockchain of resistance. A pledge to the unburnable.</span>
+            <span class="lang-ja">抵抗のブロックチェーン。燃えないものへの誓約。</span>
+            <span class="lang-ru">Блокчейн сопротивления. Обязательство несгораемого.</span>
+            <span class="lang-es">Una blockchain de resistencia. Un compromiso con lo inquemable.</span>
+        </p>
+        <div class="hero-btns">
+            <button onclick="handleHeroWalletClick()" class="hero-btn primary" id="heroWalletBtn">
+                💼 <span class="lang-el">Σύνδεση Wallet</span><span class="lang-en">Connect Wallet</span><span class="lang-ja">ウォレット接続</span><span class="lang-ru">Подключить кошелёк</span><span class="lang-es">Conectar Billetera</span>
+            </button>
+            <a href="/whitepaper" class="hero-btn secondary">
+                📄 Whitepaper
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Exchange Rate Banner -->
+<div class="rate-banner">
+    <div class="rate-value">1 THR = 0.0001 BTC</div>
+    <div class="rate-label">
+        <span class="lang-el">Σταθερή Ισοτιμία</span>
+        <span class="lang-en">Pegged Rate</span>
+        <span class="lang-ja">固定レート</span>
+        <span class="lang-ru">Фиксированный курс</span>
+        <span class="lang-es">Tasa Fija</span>
+    </div>
+</div>
+
+<!-- Live Network Stats -->
+<div class="stats-section">
+    <h2>📊
+        <span class="lang-el">Ζωντανά Στατιστικά Δικτύου</span>
+        <span class="lang-en">Live Network Stats</span>
+        <span class="lang-ja">ライブネットワーク統計</span>
+        <span class="lang-ru">Статистика сети в реальном времени</span>
+        <span class="lang-es">Estadísticas de Red en Vivo</span>
+    </h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-icon">⛓️</span>
+            <div class="stat-value" id="statBlocks">
+                <div id="statChainHeight"><span class="loading-spinner"></span></div>
+                <div id="statIndexHeight" style="font-size: 12px; opacity: 0.7;"></div>
+                <div id="statIndexBadge" class="indexing-badge" style="display: none;">Indexing…</div>
+            </div>
+            <div class="stat-label">Chain / Indexed</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">💰</span>
+            <div class="stat-value" id="statSupply"><span class="loading-spinner"></span></div>
+            <div class="stat-label" id="statSupplyMeta" style="margin-top: 6px; font-size: 0.75em; text-transform: none; letter-spacing: 0;"></div>
+            <div class="stat-label">THR Supply</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">👛</span>
+            <div class="stat-value" id="statWallets"><span class="loading-spinner"></span></div>
+            <div class="stat-label">Wallets</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🪙</span>
+            <div class="stat-value" id="statTokens"><span class="loading-spinner"></span></div>
+            <div class="stat-label">Tokens</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">💎</span>
+            <div class="stat-value" id="statPools"><span class="loading-spinner"></span></div>
+            <div class="stat-label">Pools</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">📝</span>
+            <div class="stat-value" id="statTxns"><span class="loading-spinner"></span></div>
+            <div class="stat-label">
+                <span class="lang-el">Συναλλαγές</span>
+                <span class="lang-en">Transactions</span>
+                <span class="lang-ja">トランザクション</span>
+                <span class="lang-ru">Транзакции</span>
+                <span class="lang-es">Transacciones</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <a href="/swap" class="quick-action">
+        <span class="quick-action-icon">🔄</span>
+        <span class="quick-action-label">Swap</span>
+    </a>
+    <a href="/tokens" class="quick-action">
+        <span class="quick-action-icon">🪙</span>
+        <span class="quick-action-label">Tokens</span>
+    </a>
+    <a href="/pools" class="quick-action">
+        <span class="quick-action-icon">💎</span>
+        <span class="quick-action-label">Pools</span>
+    </a>
+    <a href="/nft" class="quick-action">
+        <span class="quick-action-icon">🖼️</span>
+        <span class="quick-action-label">NFTs</span>
+    </a>
+    <a href="/bridge" class="quick-action">
+        <span class="quick-action-icon">🌉</span>
+        <span class="quick-action-label">Bridge</span>
+    </a>
+    <a href="/governance" class="quick-action">
+        <span class="quick-action-icon">🏛️</span>
+        <span class="quick-action-label">DAO</span>
+    </a>
+</div>
+
+<!-- Features Grid -->
+<div class="features-section">
+    <h2>🚀
+        <span class="lang-el">Χαρακτηριστικά Πλατφόρμας</span>
+        <span class="lang-en">Platform Features</span>
+        <span class="lang-ja">プラットフォーム機能</span>
+        <span class="lang-ru">Возможности платформы</span>
+        <span class="lang-es">Características de la Plataforma</span>
+    </h2>
+    <div class="features-grid">
+        <a href="/tokens" class="feature-card">
+            <div class="feature-icon">🏭</div>
+            <div class="feature-title">Token Factory</div>
+            <div class="feature-desc">
+                <span class="lang-el">Δημιουργήστε τα δικά σας tokens με μία κλικ. ERC-20 compatible με πλήρη έλεγχο.</span>
+                <span class="lang-en">Create your own tokens with one click. ERC-20 compatible with full control.</span>
+                <span class="lang-ja">ワンクリックで独自のトークンを作成。ERC-20互換で完全制御。</span>
+                <span class="lang-ru">Создавайте свои токены одним кликом. Совместимость с ERC-20 и полный контроль.</span>
+                <span class="lang-es">Crea tus propios tokens con un clic. Compatible con ERC-20 con control total.</span>
+            </div>
+        </a>
+        <a href="/nft" class="feature-card">
+            <div class="feature-icon">🖼️</div>
+            <div class="feature-title">NFT Marketplace</div>
+            <div class="feature-desc">
+                <span class="lang-el">Mint, αγοράστε και πουλήστε μοναδικά ψηφιακά έργα τέχνης.</span>
+                <span class="lang-en">Mint, buy and sell unique digital artworks.</span>
+                <span class="lang-ja">ユニークなデジタルアートをミント、購入、販売。</span>
+                <span class="lang-ru">Создавайте, покупайте и продавайте уникальные цифровые произведения искусства.</span>
+                <span class="lang-es">Acuña, compra y vende obras de arte digitales únicas.</span>
+            </div>
+        </a>
+        <a href="/courses" class="feature-card">
+            <div class="feature-icon">📚</div>
+            <div class="feature-title">Learn & Earn</div>
+            <div class="feature-desc">
+                <span class="lang-el">Μάθετε για το blockchain και κερδίστε THR tokens ολοκληρώνοντας μαθήματα.</span>
+                <span class="lang-en">Learn about blockchain and earn THR tokens by completing courses.</span>
+                <span class="lang-ja">ブロックチェーンを学び、コース完了でTHRトークンを獲得。</span>
+                <span class="lang-ru">Изучайте блокчейн и зарабатывайте токены THR, проходя курсы.</span>
+                <span class="lang-es">Aprende sobre blockchain y gana tokens THR completando cursos.</span>
+            </div>
+        </a>
+        <a href="/evm" class="feature-card">
+            <div class="feature-icon">📜</div>
+            <div class="feature-title">Smart Contracts</div>
+            <div class="feature-desc">
+                <span class="lang-el">Deploy EVM-compatible smart contracts με έτοιμα templates.</span>
+                <span class="lang-en">Deploy EVM-compatible smart contracts with ready templates.</span>
+                <span class="lang-ja">既製テンプレートでEVM互換スマートコントラクトをデプロイ。</span>
+                <span class="lang-ru">Развертывайте EVM-совместимые смарт-контракты с готовыми шаблонами.</span>
+                <span class="lang-es">Despliega contratos inteligentes compatibles con EVM con plantillas listas.</span>
+            </div>
+        </a>
+        <a href="/music" class="feature-card">
+            <div class="feature-icon">🎵</div>
+            <div class="feature-title">Decent Music</div>
+            <div class="feature-desc">
+                <span class="lang-el">Αποκεντρωμένη πλατφόρμα μουσικής για καλλιτέχνες και ακροατές.</span>
+                <span class="lang-en">Decentralized music platform for artists and listeners.</span>
+                <span class="lang-ja">アーティストとリスナーのための分散型音楽プラットフォーム。</span>
+                <span class="lang-ru">Децентрализованная музыкальная платформа для артистов и слушателей.</span>
+                <span class="lang-es">Plataforma de música descentralizada para artistas y oyentes.</span>
+            </div>
+        </a>
+        <a href="/governance" class="feature-card">
+            <div class="feature-icon">🏛️</div>
+            <div class="feature-title">
+                <span class="lang-el">Διακυβέρνηση DAO</span>
+                <span class="lang-en">DAO Governance</span>
+                <span class="lang-ja">DAOガバナンス</span>
+                <span class="lang-ru">Управление DAO</span>
+                <span class="lang-es">Gobernanza DAO</span>
+            </div>
+            <div class="feature-desc">
+                <span class="lang-el">Ψηφίστε για προτάσεις και διαμορφώστε το μέλλον του δικτύου.</span>
+                <span class="lang-en">Vote on proposals and shape the future of the network.</span>
+                <span class="lang-ja">提案に投票し、ネットワークの未来を形作りましょう。</span>
+                <span class="lang-ru">Голосуйте за предложения и формируйте будущее сети.</span>
+                <span class="lang-es">Vota propuestas y da forma al futuro de la red.</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Ecosystem Services -->
+{% set bs = bootstrap or {} %}
+<div class="features-section">
+    <h2>🌐
+        <span class="lang-el">Υπηρεσίες Οικοσυστήματος</span>
+        <span class="lang-en">Ecosystem Services</span>
+        <span class="lang-ja">エコシステムサービス</span>
+        <span class="lang-ru">Сервисы экосистемы</span>
+        <span class="lang-es">Servicios del Ecosistema</span>
+    </h2>
+    <div class="features-grid">
+        <a href="{{ bs.get('primary', 'https://api.thronoschain.org') }}/wallet" class="feature-card" target="_blank">
+            <div class="feature-icon">💼</div>
+            <div class="feature-title">Wallet</div>
+            <div class="feature-desc">
+                <span class="lang-el">Πρόσβαση στο web wallet σας.</span>
+                <span class="lang-en">Access your web wallet.</span>
+                <span class="lang-ja">ウェブウォレットにアクセス。</span>
+                <span class="lang-ru">Доступ к вашему веб-кошельку.</span>
+                <span class="lang-es">Accede a tu billetera web.</span>
+            </div>
+        </a>
+        <a href="{{ bs.get('explorer', 'https://explorer.thronoschain.org') }}" class="feature-card" target="_blank">
+            <div class="feature-icon">🔍</div>
+            <div class="feature-title">Explorer</div>
+            <div class="feature-desc">
+                <span class="lang-el">Εξερεύνηση blocks, συναλλαγών και wallets.</span>
+                <span class="lang-en">Explore blocks, transactions and wallets.</span>
+                <span class="lang-ja">ブロック、トランザクション、ウォレットを探索。</span>
+                <span class="lang-ru">Исследуйте блоки, транзакции и кошельки.</span>
+                <span class="lang-es">Explora bloques, transacciones y billeteras.</span>
+            </div>
+        </a>
+        <a href="{{ bs.get('verifyid', 'https://verifyid.thronoschain.org') }}" class="feature-card" target="_blank">
+            <div class="feature-icon">🛡️</div>
+            <div class="feature-title">VerifyID</div>
+            <div class="feature-desc">
+                <span class="lang-el">Επαλήθευση συσκευών και ψηφιακή ταυτότητα.</span>
+                <span class="lang-en">Device verification and digital identity.</span>
+                <span class="lang-ja">デバイス検証とデジタルID。</span>
+                <span class="lang-ru">Верификация устройств и цифровая идентификация.</span>
+                <span class="lang-es">Verificación de dispositivos e identidad digital.</span>
+            </div>
+        </a>
+        <a href="{{ bs.get('ai_core', 'https://ai.thronoschain.org') }}" class="feature-card" target="_blank">
+            <div class="feature-icon">🤖</div>
+            <div class="feature-title">AI Core</div>
+            <div class="feature-desc">
+                <span class="lang-el">Πρόσβαση στο AI Chat (Pythia) και Architect.</span>
+                <span class="lang-en">Access AI Chat (Pythia) and Architect.</span>
+                <span class="lang-ja">AIチャット（Pythia）とArchitectにアクセス。</span>
+                <span class="lang-ru">Доступ к AI Chat (Pythia) и Architect.</span>
+                <span class="lang-es">Accede a AI Chat (Pythia) y Architect.</span>
+            </div>
+        </a>
+        <a href="{{ bs.get('sentinel', 'https://sentinel.thronoschain.org') }}" class="feature-card" target="_blank">
+            <div class="feature-icon">👁️</div>
+            <div class="feature-title">Sentinel</div>
+            <div class="feature-desc">
+                <span class="lang-el">Παρακολούθηση δικτύου και ασφάλεια nodes.</span>
+                <span class="lang-en">Network monitoring and node security.</span>
+                <span class="lang-ja">ネットワーク監視とノードセキュリティ。</span>
+                <span class="lang-ru">Мониторинг сети и безопасность узлов.</span>
+                <span class="lang-es">Monitoreo de red y seguridad de nodos.</span>
+            </div>
+        </a>
+        <a href="{{ bs.get('builder', 'https://builder.thronoschain.org') }}" class="feature-card" target="_blank">
+            <div class="feature-icon">🏗️</div>
+            <div class="feature-title">ThronosBuild</div>
+            <div class="feature-desc">
+                <span class="lang-el">Υποβολή κώδικα, πληρωμή με THR, παραλαβή APK/AAB.</span>
+                <span class="lang-en">ThronosBuild lets developers submit source code, pay with THR, and receive production-ready APK/AAB builds.</span>
+                <span class="lang-ja">ソースコードを送信し、THRで支払い、APK/AABビルドを受け取る。</span>
+                <span class="lang-ru">Отправьте исходный код, оплатите THR и получите готовые APK/AAB сборки.</span>
+                <span class="lang-es">Envía código fuente, paga con THR y recibe compilaciones APK/AAB listas para producción.</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Latest Activity -->
+<div class="activity-section">
+    <h2>📡
+        <span class="lang-el">Πρόσφατη Δραστηριότητα</span>
+        <span class="lang-en">Recent Activity</span>
+        <span class="lang-ja">最近のアクティビティ</span>
+        <span class="lang-ru">Недавняя активность</span>
+        <span class="lang-es">Actividad Reciente</span>
+    </h2>
+    <ul class="activity-list" id="activityList">
+        <li class="activity-item">
+            <span class="activity-icon">⏳</span>
+            <div class="activity-details">
+                <div class="activity-title">
+                    <span class="lang-el">Φόρτωση...</span>
+                    <span class="lang-en">Loading...</span>
+                    <span class="lang-ja">読み込み中...</span>
+                    <span class="lang-ru">Загрузка...</span>
+                    <span class="lang-es">Cargando...</span>
+                </div>
+            </div>
+        </li>
+    </ul>
+</div>
+
+<!-- Crypto Hunters Beta Section -->
+<div class="beta-section">
+    <h3>🎮
+        <span class="lang-el">Crypto Hunters - Beta & Ψηφοφορία</span>
+        <span class="lang-en">Crypto Hunters - Beta & Voting</span>
+        <span class="lang-ja">クリプトハンターズ - Beta & 投票</span>
+        <span class="lang-ru">Crypto Hunters - Бета и голосование</span>
+        <span class="lang-es">Crypto Hunters - Beta y Votación</span>
+    </h3>
+    <p>
+        <span class="lang-el">Λάβετε μέρος στο κυνήγι! Βοηθήστε μας να δοκιμάσουμε το επερχόμενο παιχνίδι Crypto Hunters. Ψηφίστε για χαρακτηριστικά και κερδίστε ανταμοιβές.</span>
+        <span class="lang-en">Join the hunt! Help us test the upcoming Crypto Hunters game. Vote on features and earn rewards.</span>
+        <span class="lang-ja">ハントに参加しよう！Crypto Huntersゲームのテストにご協力ください。機能に投票して報酬を獲得。</span>
+        <span class="lang-ru">Присоединяйтесь к охоте! Помогите протестировать игру Crypto Hunters. Голосуйте за функции и получайте награды.</span>
+        <span class="lang-es">¡Únete a la caza! Ayúdanos a probar el próximo juego Crypto Hunters. Vota por funciones y gana recompensas.</span>
+    </p>
+    <div id="votingPolls" class="voting-polls">
+        <p>
+            <span class="lang-el">Φόρτωση ψηφοφοριών...</span>
+            <span class="lang-en">Loading polls...</span>
+            <span class="lang-ja">投票を読み込み中...</span>
+            <span class="lang-ru">Загрузка опросов...</span>
+            <span class="lang-es">Cargando encuestas...</span>
+        </p>
+    </div>
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="{{ game_panel_url }}" target="_blank" class="hero-btn secondary" style="padding: 12px 30px;">
+            👾
+            <span class="lang-el">Παίξτε το Beta</span>
+            <span class="lang-en">Play Beta</span>
+            <span class="lang-ja">ベータをプレイ</span>
+            <span class="lang-ru">Играть в бету</span>
+            <span class="lang-es">Jugar Beta</span>
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const TRANSLATIONS = {
+        el: {
+            blockMined: "Block {0} mined",
+            tokenCreated: "Token {0} δημιουργήθηκε",
+            noActivity: "Δεν υπάρχει πρόσφατη δραστηριότητα",
+            noPolls: "Δεν υπάρχουν ενεργές ψηφοφορίες",
+            votes: "ψήφοι",
+            vote: "Ψηφίστε",
+            voteSuccess: "✅ Η ψήφος σας καταγράφηκε! Ευχαριστούμε!",
+            voteDuplicate: "⚠️ Έχετε ήδη ψηφίσει σε αυτή την ψηφοφορία!",
+            voteError: "❌ Σφάλμα: ",
+            voteFailed: "❌ Αποτυχία αποστολής ψήφου"
+        },
+        en: {
+            blockMined: "Block {0} mined",
+            tokenCreated: "Token {0} created",
+            noActivity: "No recent activity",
+            noPolls: "No active polls",
+            votes: "votes",
+            vote: "Vote",
+            voteSuccess: "✅ Your vote has been recorded! Thank you!",
+            voteDuplicate: "⚠️ You have already voted in this poll!",
+            voteError: "❌ Error: ",
+            voteFailed: "❌ Failed to submit vote"
+        },
+        ja: {
+            blockMined: "ブロック {0} がマイニングされました",
+            tokenCreated: "トークン {0} が作成されました",
+            noActivity: "最近のアクティビティはありません",
+            noPolls: "アクティブな投票はありません",
+            votes: "票",
+            vote: "投票",
+            voteSuccess: "✅ 投票が記録されました！ありがとうございます！",
+            voteDuplicate: "⚠️ すでにこの投票に投票しています！",
+            voteError: "❌ エラー: ",
+            voteFailed: "❌ 投票の送信に失敗しました"
+        },
+        ru: {
+            blockMined: "Блок {0} добыт",
+            tokenCreated: "Токен {0} создан",
+            noActivity: "Нет недавней активности",
+            noPolls: "Нет активных опросов",
+            votes: "голосов",
+            vote: "Голосовать",
+            voteSuccess: "✅ Ваш голос записан! Спасибо!",
+            voteDuplicate: "⚠️ Вы уже голосовали в этом опросе!",
+            voteError: "❌ Ошибка: ",
+            voteFailed: "❌ Не удалось отправить голос"
+        },
+        es: {
+            blockMined: "Bloque {0} minado",
+            tokenCreated: "Token {0} creado",
+            noActivity: "Sin actividad reciente",
+            noPolls: "No hay encuestas activas",
+            votes: "votos",
+            vote: "Votar",
+            voteSuccess: "✅ ¡Tu voto ha sido registrado! ¡Gracias!",
+            voteDuplicate: "⚠️ ¡Ya has votado en esta encuesta!",
+            voteError: "❌ Error: ",
+            voteFailed: "❌ Error al enviar el voto"
+        }
+    };
+
+    function getLang() {
+        const lang = localStorage.getItem("lang") || "gr";
+        if (lang === "gr" || lang === "el") return "el";
+        return lang;
+    }
+
+    function t(key, ...args) {
+        const lang = getLang();
+        const translations = TRANSLATIONS[lang] || TRANSLATIONS.en;
+        let text = translations[key] || TRANSLATIONS.en[key] || key;
+        args.forEach((arg, i) => {
+            text = text.replace(`{${i}}`, arg);
+        });
+        return text;
+    }
+
+    // ─── Load Network Stats ───────────────────────────────────────
+    async function loadNetworkStats() {
+        try {
+            const dashboard = await fetch("/api/dashboard").then(r => r.json()).catch(() => ({}));
+            const stats = dashboard.stats || dashboard || {};
+            const tip = dashboard.tip || {};
+
+            // Support both old and new API field names
+            const chainHeight = dashboard.chain_height ?? dashboard.chain_tip_height ?? dashboard.block_count ?? 0;
+            const indexHeight = dashboard.index_tip_height ?? dashboard.chain_height ?? chainHeight;
+            const indexLag = dashboard.index_lag ?? 0;
+            const totalSupply = dashboard.total_supply ?? stats.total_supply ?? stats.total_supply_thr ?? tip.total_supply ?? 0;
+            const circulatingSupply = stats.circulating_supply ?? stats.circulating_supply_thr ?? null;
+            const lockedSupply = stats.pool_locked_thr ?? stats.locked_in_pools_thr ?? null;
+            const tokenCount = dashboard.token_count ?? stats.token_count ?? 0;
+            const poolCount = dashboard.pool_count ?? stats.pool_count ?? 0;
+            const walletCount = dashboard.wallet_count ?? dashboard.pledge_count ?? stats.wallet_count ?? 0;
+            const txCount = dashboard.tx_count ?? stats.tx_count ?? 0;
+
+            const chainEl = document.getElementById("statChainHeight");
+            const indexEl = document.getElementById("statIndexHeight");
+            const indexBadge = document.getElementById("statIndexBadge");
+            if (chainEl) {
+                chainEl.textContent = `Chain: ${Number(chainHeight || 0).toLocaleString()}`;
+            }
+            if (indexEl) {
+                indexEl.textContent = `Indexed: ${Number(indexHeight || 0).toLocaleString()}`;
+            }
+            if (indexBadge) {
+                indexBadge.style.display = indexLag > 0 ? "inline-block" : "none";
+            }
+            document.getElementById("statSupply").textContent = totalSupply.toFixed(2);
+            const supplyMeta = document.getElementById("statSupplyMeta");
+            if (supplyMeta && circulatingSupply !== null && lockedSupply !== null) {
+                supplyMeta.textContent = `Circulating: ${Number(circulatingSupply).toFixed(2)} · Locked: ${Number(lockedSupply).toFixed(2)}`;
+            } else if (supplyMeta) {
+                supplyMeta.textContent = "";
+            }
+            document.getElementById("statWallets").textContent = walletCount.toLocaleString();
+            document.getElementById("statTokens").textContent = tokenCount.toLocaleString();
+            document.getElementById("statPools").textContent = poolCount.toLocaleString();
+            document.getElementById("statTxns").textContent = (txCount || chainHeight).toLocaleString();
+
+            window.__THR_STATS = { dashboard };
+        } catch (e) {
+            console.error("Failed to load stats:", e);
+            document.querySelectorAll('.stat-value').forEach(el => {
+                if (el.querySelector('.loading-spinner')) {
+                    el.textContent = '-';
+                }
+            });
+        }
+    }
+
+    // ─── Load Recent Activity ─────────────────────────────────────
+    async function loadRecentActivity() {
+        const activityList = document.getElementById("activityList");
+
+        try {
+            const dashboard = await fetch("/api/dashboard").then(r => r.json()).catch(() => ({}));
+            const lastBlock = dashboard.tip || null;
+            const tokensRes = { tokens: dashboard.recent_tokens || [] };
+
+            const activities = [];
+
+            if (lastBlock && lastBlock.block_hash) {
+                activities.push({
+                    icon: "⛏️",
+                    title: t("blockMined", lastBlock.block_count),
+                    time: lastBlock.timestamp || "Recently",
+                    value: lastBlock.thr_address ? lastBlock.thr_address.slice(0, 12) + "..." : ""
+                });
+            }
+
+            if (tokensRes.tokens && tokensRes.tokens.length > 0) {
+                const recentTokens = tokensRes.tokens.slice(-3).reverse();
+                recentTokens.forEach(tok => {
+                    activities.push({
+                        icon: "🪙",
+                        title: t("tokenCreated", tok.symbol),
+                        time: "Recently",
+                        value: tok.current_supply.toLocaleString() + " " + tok.symbol
+                    });
+                });
+            }
+
+            if (activities.length === 0) {
+                activityList.innerHTML = `
+                    <li class="activity-item">
+                        <span class="activity-icon">📭</span>
+                        <div class="activity-details">
+                            <div class="activity-title">${t("noActivity")}</div>
+                        </div>
+                    </li>
+                `;
+            } else {
+                activityList.innerHTML = activities.map(act => `
+                    <li class="activity-item">
+                        <span class="activity-icon">${act.icon}</span>
+                        <div class="activity-details">
+                            <div class="activity-title">${act.title}</div>
+                            <div class="activity-time">${act.time}</div>
+                        </div>
+                        <div class="activity-value">${act.value}</div>
+                    </li>
+                `).join("");
+            }
+        } catch (e) {
+            console.error("Failed to load activity:", e);
+        }
+    }
+
+    // ─── Load Voting Polls ────────────────────────────────────────
+    async function loadVotingPolls() {
+        const lang = getLang();
+        const container = document.getElementById("votingPolls");
+
+        try {
+            let data = null;
+            if (window.FetchUtils && typeof window.FetchUtils.smartFetchJSON === "function") {
+                data = await window.FetchUtils.smartFetchJSON("/api/voting/polls");
+            } else {
+                const res = await fetch("/api/voting/polls");
+                data = await res.json().catch(() => null);
+            }
+            const polls = Array.isArray(data) ? data : (data && Array.isArray(data.polls) ? data.polls : []);
+
+            if (!polls.length) {
+                container.innerHTML = `<p style="color: #999; text-align: center;">${t("noPolls")}</p>`;
+                return;
+            }
+
+            container.innerHTML = polls.map(poll => {
+                const title = poll.title[lang] || poll.title["en"] || poll.title["el"];
+                const desc = poll.description[lang] || poll.description["en"] || poll.description["el"];
+                const votes = poll.votes || 0;
+
+                return `
+                    <div class="poll-card">
+                        <div class="poll-title">${title}</div>
+                        <div class="poll-desc">${desc}</div>
+                        <div class="poll-footer">
+                            <span class="poll-votes">👍 ${votes} ${t("votes")}</span>
+                            <button onclick="vote('${poll.id}')" class="poll-btn">${t("vote")}</button>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        } catch (e) {
+            console.warn("Failed to load polls:", e);
+            container.innerHTML = `<p style="color: #999; text-align: center;">${t("noPolls")}</p>`;
+        }
+    }
+
+    // ─── Vote Function ────────────────────────────────────────────
+    window.vote = function(pollId) {
+        const wallet = localStorage.getItem("thr_wallet") || null;
+
+        fetch("/api/voting/vote", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ poll_id: pollId, wallet: wallet })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === "success") {
+                alert(t("voteSuccess"));
+                loadVotingPolls();
+            } else if (data.status === "duplicate") {
+                alert(t("voteDuplicate"));
+            } else {
+                alert(t("voteError") + (data.error || "Unknown error"));
+            }
+        })
+        .catch(err => {
+            console.error("Vote error:", err);
+            alert(t("voteFailed"));
+        });
+    };
+
+    let networkStatsInterval = null;
+    let recentActivityInterval = null;
+
+    // ─── Initialize ───────────────────────────────────────────────
+    loadNetworkStats();
+    loadRecentActivity();
+    loadVotingPolls();
+
+    networkStatsInterval = setInterval(loadNetworkStats, 30000);
+    recentActivityInterval = setInterval(loadRecentActivity, 60000);
+
+    window.addEventListener("langChanged", () => {
+        loadRecentActivity();
+        loadVotingPolls();
+    });
+
+    window.addEventListener("beforeunload", () => {
+        if (networkStatsInterval) {
+            clearInterval(networkStatsInterval);
+            networkStatsInterval = null;
+        }
+        if (recentActivityInterval) {
+            clearInterval(recentActivityInterval);
+            recentActivityInterval = null;
+        }
+    });
+})();
+
+
+// ─── Wallet Session Hooks ───────────────────────────────────────
+(function() {
+    function updateHeroButton(address) {
+        const btn = document.getElementById('heroWalletBtn');
+        if (!btn) return;
+        if (address) {
+            btn.innerHTML = '💼 ' + address.slice(0, 6) + '...' + address.slice(-4);
+        } else {
+            btn.innerHTML = '💼 <span class="lang-el">Σύνδεση Wallet</span><span class="lang-en">Connect Wallet</span><span class="lang-ja">ウォレット接続</span><span class="lang-ru">Подключить кошелёк</span><span class="lang-es">Conectar Billetera</span>';
+        }
+    }
+
+    window.handleHeroWalletClick = function() {
+        // Use canonical wallet header modal (legacy system)
+        openHeaderWalletModal();
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateHeroButton(walletSession.getAddress());
+    });
+
+    window.addEventListener('storage', (ev) => {
+        if (ev.key === walletSession.ADDRESS_KEY) {
+            updateHeroButton(ev.newValue || '');
+        }
+    });
+
+    window.updateHeroButton = updateHeroButton;
+})();
+</script>
+{% endblock %}
